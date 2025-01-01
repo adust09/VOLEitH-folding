@@ -1,0 +1,10 @@
+[package]
+name = "voleith"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bitvec = "1.0.1"
+ff = "0.13.0"
+rand = "0.8.5"
+subtle = "2.6.1"
