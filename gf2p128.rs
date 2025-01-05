@@ -59,7 +59,6 @@ impl PartialEq for UnreducedGF2p128Fast {
     }
 }
 
-
 impl Eq for UnreducedGF2p128Fast {}
 
 impl fmt::Debug for GF2p128Fast {
@@ -118,7 +117,7 @@ impl GF2p128Naive {
 
     unsafe fn reduce(x: [__m128i; 2],) -> __m128i {
         unsafe {
-            let [lo, hi] = x;
+            let [lo, hi,] = x;
             let xmmmask = _mm_setr_epi32(i32::MAX, 0x0, 0x0, 0x0,);
             let tmp7 = _mm_srli_epi32(hi, 31,);
             let tmp8 = _mm_srli_epi32(hi, 30,);
@@ -137,6 +136,5 @@ impl GF2p128Naive {
             let tmp3 = _mm_xor_si128(tmp3, tmp12,);
             _mm_xor_si128(tmp3, tmp6,)
         }
-    }
     }
 }

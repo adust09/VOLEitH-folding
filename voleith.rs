@@ -35,5 +35,40 @@ pub trait VoleInTheHeadSender {
     fn get_output(&self,) -> (&GF2View, MatrixView<'_, Self::Field,>,);
 }
 
+pub trait VoleInTheHeadReceiver {
+    type Commitment: Clone;
+    type Challenge: Clone;
+    type Response: Clone;
+    type Decommitment: Clone;
+    type Field: Clone;
 
-#[derive(Clone, Debug,Copy,PartialEq,Eq,)]
+    const FIELD_SIZE: usize;
+
+    fn new(vole_length: usize, num_repetitions: usize,) -> Self;
+    fn commit_message(&mut self, message: GF2Vector,) -> Self::Commitment;
+    fn commit_random(&mut self,) -> Self::Commitment;
+    fn consistency_check_respond(&mut self, random_points: Self::Challenge,) -> Self::Response;
+    #[allow(non_snake_case)]
+    fn decommit(&mut self, Deltas: Vector<Self::Field,>,) -> Self::Decommitment;
+    fn get_output(&self,) -> (&GF2View, MatrixView<'_, Self::Field,>,);
+}
+
+#[derive(Clone, Debug, Copy, PartialEq, Eq,)]
+enum VoleInTheHeadSenderState {
+    New,
+    Committed,
+    RespondedToConsistencyChallenge,
+    Ready,
+}
+
+#[allow(non_snake_case)]
+pub struct VoleInTheHeadSenderFromVC<F: SmallGF, VC: VecCom, H: Digest = blake3::Hasher,> {
+    vole_length: usize,
+    num_repetitions: usize,
+    state: VoleInTheHeadSenderState,
+    u: GF2Vector,
+    v: Matrix<F,>,
+    decommitment_keys: Vec<VC::decommitmentKey,>,
+    _phantom_vc: PhantomData<VC,>,
+    _phantom_h: PhantomData<H,>,
+}
