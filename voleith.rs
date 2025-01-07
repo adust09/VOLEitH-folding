@@ -8,8 +8,8 @@ use core::mem;
 use digest::XofReader;
 use digest::{Digest, Output as DigestOutput};
 use itertools::izip;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, s};
-use rand::{Rng, SeedableRng, thread_rng};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use rand::{thread_rng, Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
 
 type Vector<T> = Array1<T>;
@@ -162,5 +162,128 @@ impl<F: SmallGF, VC: VecCom, H: Digest> VoleInTheHeadSenderFromVC<F, VC, H> {
 
         self.state = VoleInTheHeadSenderState::Committed;
         Commitment { vc_commitment_hash, correction_values }
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Commitment<H: Digest> {
+    pub vc_commitment_hash: DigestOutput<H>,
+    pub correction_values: Vec<GF2Vector>,
+}
+
+impl<H: Digest> Clone for Commitment<H> {
+    fn clone(&self) -> Self {
+        Self {
+            vc_commitment_hash: self.vc_commitment_hash.clone(),
+            correction_values: self.correction_values.clone(),
+        }
+    }
+}
+
+impl<H: Digest> bincode::Encode for Commitment<H> {
+    fn encode<E: bincode::enc::Encoder>(
+        &self,
+        encoder: &mut E,
+    ) -> core::result::Result<(), bincode::error::EncodeError> {
+        bincode::Encode::encode(&self.vc_commitment_hash, encoder)?;
+        bincode::Encode::encode(&self.correction_values, encoder)?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct Response<F, H: Digest> {
+    pub vector: Vector<F>,
+    pub hsh: DigestOutput<H>,
+}
+
+impl<F: Clone, H: Digest> Clone for Response<F, H> {
+    fn clone(&self) -> Self {
+        Self { vector: self.vector.clone(), hsh: self.hsh.clone() }
+    }
+}
+
+impl<F: bincode::Encode, H: Digest> bincode::Encode for Response<F, H> {
+    fn encode<E: bincode::enc::Encoder>(
+        &self,
+        encoder: &mut E,
+    ) -> core::result::Result<(), bincode::error::EncodeError> {
+        bincode::Encode::encode(&self.vector, encoder)?;
+        bincode::Encode::encode(&self.hsh, encoder)?;
+        Ok(())
+    }
+}
+
+#[allow(non_snake_case)]
+impl<F: SmallGF, VC: VecCom, H: Digest> VoleInTheHeadSender
+    for VOleInTheHeadSenderFromVC<F, VC, H>
+{
+    type Commitment = Commitment<H>;
+    type Challenge = Vector<Self::Di>;
+    type Response = Response<F, H>;
+    type Decommitment = Vec<VC::Decommitment>;
+    type Field = F;
+
+    const FIELD_SIZE: usize = 0;
+
+    fn new(vole_length: usize, num_repetitions: usize) -> Self {
+        let ell_hat = vole_length + num_repetitions;
+        let mut output = Self {
+            vole_length,
+            num_repetitions,
+            state: VoleInTheHeadSenderState::New,
+            u: GF2Vector::new(),
+            v: Matrix::<F>::zeros((num_repetitions, ell_hat)),
+            decommitment_keys: Vec::with_capacity(num_repetitions),
+            _phantom_vc: PhantomData,
+            _phantom_h: PhantomData,
+        };
+        output.u.resize(ell_hat, false);
+        output
+    }
+
+    fn commit_message(&mut self, message: GF2Vector) -> Self::Commitment {
+        self.commit_impl(Some(message))
+    }
+
+    fn commit_message(&mut self, message: GF2Vector) -> Self::Commitment {
+        self.commit_impl(None)
+    }
+
+    fn consistency_check_respond(&mut self, random_points: Vector<Self::Field>) -> Self::Response {
+        assert_eq!(self.state, VoleInTheHeadSenderState::Committed);
+        assert_eq!(random_points.len(), self.num_repetitions);
+
+        let (u_tilde, V_tilde) =
+            hash_bitvector_and_matrix((&random_points).into(), self.u.as_ref(), (&self.V).into());
+
+        let V_tilde_hash=H::digest(V_tilde.as_slice().expect("not in standard memory order").iter().flat_map(|x|x.to_repr()).collect::<Vec<u8>());
+
+        self.u.resize(self.vole_length, false);
+
+        self.state = VoleInTheHeadSenderState::RespondedToConsistencyChallenge;
+        self::Response { vector: u_tilde, hsh: V_tilde_hash }
+    
+    }
+
+    [#allow(non_snake_case)]
+    fn decommit(&mut self, Deltas: vector<F>) -> Self::Decommitment{
+        assert_eq!(self.state,VoleInTheHeadSenderState::RespondedToConsistencyChallenge);
+        assert_eq!(Deltas.len(),self.vole_length);
+        let log_q = F::LOG_ORDER;
+        let decommitments = Deltas.iter().zip(self.decommitment_keys.iter()).map((|Delta_i, &decommitment_key|){
+            VC::decommit(log_q,decommitment_key,(*Delta_i).into())
+        }).collect();
+        self.state = VoleInTheHeadSenderState::Ready;
+        decommitments
+    }
+    
+
+    fn get_output(&self) -> (&GF2View, MatrixView<'_, Self::Field>) {
+        assert_ne!(self.state, VoleInTheHeadSenderState::New);
+        let tau = self.num_repetitions;
+        let ell = self.vole_length;
+        assert_eq!(self.V.shape(), &[ell + tau, tau]);
+        (&self.u.as_ref()[..ell], self.V.slice(s![..ell, ..]))
     }
 }
