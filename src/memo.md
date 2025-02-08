@@ -1,7 +1,38 @@
-1. Blobは必ずしも取り込まれるとは限らない
-   1. 取り込まれたとしても数週間で消える
-2. SCからBlobにアクセスし、Proofを読み出すことは可能か？
-   1. その場合はS3を叩くような形になる想定で合ってるか？
-   2. 読み出せた場合、storageが呼び出されないことで通常に比べてgas costを抑えられるという仮説は正しいか
-3. Blobでできたとして、さらにgas costを削減する方法は？
-   1. SNARKでVOLE proofをラップする？
+
+# 研究の方向性
+quicksilverは固定する。vole ithの実装はFASTにあるのでそれを使う
+VOLE ZKがboolean circuitであること、AND演算にコストがかかることを考慮し、ハッシュ関数の実行についてベンチマークを計測する。
+- verification cost自体が知りたいのではなく、onchain verification costが知りたい
+-  solidity verifierよりもonchain verification costを抑えることができるでblobを使ったアプローチを提案する
+-  シンプルにsolidity verifierを使った場合とblobを使った場合の比較を行う
+-  blobで実現する手法から調査し、milestone2ではどのような実装が必要か(derivarableか)を明記する 
+- 上記のonchain verificationとは別に、シンプルなverifiaction costも計測する
+- また、client side provingが実用的であることをベンチマークを元に確認する
+- milestone3ではchallengingな部分やfuture work, client provingの可能性についてdiscussする
+
+そもそも
+KZGでラップとか考えないでいい
+KZGいらないせつ
+
+# BlobにProofを書き込む
+
+128kBまでしか書き込めないはずなので
+
+- base64でエンコード
+- DAS的に圧縮
+圧縮自体はしてない
+送信は一部だけでよく、コミュニケーションコスト落とせる
+検証は削れてても誤り訂正復元bできる
+
+# EL-CL
+ zkel vole prover作る
+or
+ELのexecute叩く
+
+シーケンス
+ブロック生成
+Proof生成
+
+dasをvoleの検証、圧縮につかう
+elはgethみたいなもの
+zkel何が嬉しい？
