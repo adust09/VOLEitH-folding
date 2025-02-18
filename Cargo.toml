@@ -1,12 +1,12 @@
 [package]
 name = "vole"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
-schmivitz = { git = "https://github.com/GaloisInc/swanky"}
+# schmivitz = { git = "https://github.com/GaloisInc/swanky"}
 folding-schemes = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "folding-schemes"}
-wasmer = { version = "2.3.0", features = ["js"] }
+solidity-verifiers = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "solidity-verifiers"}
 
 # Arkworks family
 ark-bn254 = { version = "^0.5.0", default-features = false }
@@ -30,8 +30,8 @@ ark-vesta = { version = "^0.5.0" }
 
 # This allows the crate to be built when targeting WASM.
 # See more at: https://docs.rs/getrandom/#webassembly-support 
-# [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-# getrandom = { workspace = true, features = ["js"] }
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
 
 [[example]]
 name = "sha256"
