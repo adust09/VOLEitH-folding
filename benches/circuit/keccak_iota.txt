@@ -1,0 +1,9 @@
+version 2.0.0;
+subcircuit "keccak_iota";
+@type field 2;
+@begin
+  // 入力: 状態 $0 .. $24 と、ラウンド定数 <RC>（定数パラメータ）
+  // Iota では、状態の先頭レーン A(0,0) にラウンド定数を XOR する
+  $0 <- @addc(0: $0, <RC>);
+  // 出力: 状態は $0 .. $24 に反映
+@end
