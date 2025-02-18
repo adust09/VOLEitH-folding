@@ -2,50 +2,50 @@ version 2.0.0;
 subcircuit "keccak_theta";
 @type field 2;
 @begin
-  // 入力: 25レーンの状態 $0 .. $24 （各レーンは64ビットワード）
-  // 補助ワイヤ: 
-  //   $25..$29: 列ごとのパリティ C[0]..C[4]
-  //   $30..$34: 差分 D[0]..D[4]
+  // input: 25 lane state $0 .. $24 (each lane is 64-bit word)
+  // auxiliary wires:
+  //   $25..$29: column parity C[0]..C[4]
+  //   $30..$34: difference D[0]..D[4]
   
-  // --- 列パリティの計算 ---
-  // 列 x=0: C0 = A(0,0) XOR A(0,1) XOR A(0,2) XOR A(0,3) XOR A(0,4)
+  // --- Column parity calculation ---
+  // column x=0: C0 = A(0,0) XOR A(0,1) XOR A(0,2) XOR A(极,3) XOR A(0,4)
   $25 <- @copy($0);
   $25 <- @add(0: $25, $5);
   $25 <- @add(0: $25, $10);
   $25 <- @add(0: $25, $15);
   $25 <- @add(0: $25, $20);
   
-  // 列 x=1: C1 = A(1,0) XOR A(1,1) XOR A(1,2) XOR A(1,3) XOR A(1,4)
+  // column x=1: C1 = A(1,0) XOR A(1,1) XOR A(1,2) XOR A(1,3) XOR A(1,4)
   $26 <- @copy($1);
   $26 <- @add(0: $26, $6);
   $26 <- @add(0: $26, $11);
   $26 <- @add(0: $26, $16);
   $26 <- @add(0: $26, $21);
   
-  // 列 x=2: C2 = A(2,0) XOR A(2,1) XOR A(2,2) XOR A(2,3) XOR A(2,4)
+  // column x=2: C2 = A(2,0) XOR A(2,1) XOR A(2,2) XOR A(2,3) XOR A(2,4)
   $27 <- @copy($2);
   $27 <- @add(0: $27, $7);
   $27 <- @add(0: $27, $12);
   $27 <- @add(0: $27, $17);
   $27 <- @add(0: $27, $22);
   
-  // 列 x=3: C3 = A(3,0) XOR A(3,1) XOR A(3,2) XOR A(3,3) XOR A(3,4)
+  // column x=3: C3 = A(3,0) XOR A(3,1) XOR A(3,2) XOR A(3,3) XOR A(3,4)
   $28 <- @copy($3);
   $28 <- @add(0: $28, $8);
   $28 <- @add(0: $28, $13);
   $28 <- @add(0: $28, $18);
   $28 <- @add(0: $28, $23);
   
-  // 列 x=4: C4 = A(4,0) XOR A(4,1) XOR A(4,2) XOR A(4,3) XOR A(4,4)
+  // column x=4: C4 = A(4,0) XOR A(4,1) XOR A(4,2) XOR A(4,3) XOR A(4,4)
   $29 <- @copy($4);
   $29 <- @add(0: $29, $9);
   $29 <- @add(0: $29, $14);
   $29 <- @add(0: $29, $19);
   $29 <- @add(0: $29, $24);
   
-  // --- D[x] の計算 ---
-  // D[x] = C[x-1] XOR ROT(C[x+1], 1)　（添え字はモジュロ5）
-  // 例: D0 = C4 XOR ROT(C1, 1)
+  // --- D[x] calculation ---
+  // D[x] = C[x-1] XOR ROT(C[x+1], 1) (indices modulo 5)
+  // Example: D0 = C4 XOR ROT(C1, 1)
   $30 <- @call("rot1", $26);  // ROT(C1,1)
   $30 <- @add(0: $30, $29);    // D0 = C4 XOR (rotated C1)
   
@@ -65,8 +65,8 @@ subcircuit "keccak_theta";
   $34 <- @call("rot1", $25);
   $34 <- @add(0: $34, $28);
   
-  // --- 状態の更新 ---
-  // 各レーン A(x,y) を更新: A(x,y) <- A(x,y) XOR D[x]
+  // --- State update ---
+  // Update each lane A(x,y): A(x,y) <- A(x,y) XOR D[x]
   // (A(0,0)～A(4,0))
   $0  <- @add(0: $0,  $30);
   $1  <- @add(0: $1,  $31);
@@ -98,5 +98,5 @@ subcircuit "keccak_theta";
   $23 <- @add(0: $23, $33);
   $24 <- @add(0: $24, $34);
   
-  // 出力: 更新後の状態は $0 .. $24 に格納
+  // output: updated state is stored in $0 .. $24
 @end

@@ -2,9 +2,9 @@ version 2.0.0;
 subcircuit "rot1";
 @type field 2;
 @begin
-  // 入力: $0（64ビットワード）
-  // 出力: $1 ← ROT($0, 1)
-  // 実際は、64ビットをビット分解して回転し再合成する回路が必要ですが、ここでは抽象的に
+  // input: $0 (64-bit word)
+  // output: $1 ← ROT($0, 1)
+  // In reality, a circuit that decomposes 64 bits, rotates, and recomposes is needed, but here we abstract it
   $1 <- @call("rotate_left", $0, <1>);
-  // 結果 $1 を出力
+  // output result $1
 @end

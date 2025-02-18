@@ -2,40 +2,137 @@ version 2.0.0;
 subcircuit "keccak_chi";
 @type field 2;
 @begin
-  // 入力: 各行ごとに5レーンずつ、全体で $0 .. $24
-  // Chi変換（各行 y に対して x=0..4）:
+  // input: 5 lanes per row, total of $0 .. $24
+  // Chi transform (for each row y, x=0..4):
   // new A[x,y] = A[x,y] XOR ( (NOT A[x+1,y]) AND A[x+2,y] )
   //
-  // ここでは、例として行 0（レーン $0～$4）の処理を示します。
-  // 補助回路 "not" を用いてビット反転を実装し、mul を AND として利用します。
+  // Here, we show the processing of row 0 (lanes $0～$4) as an example.
+  // We use the auxiliary circuit "not" to implement bit inversion and use mul as AND.
   
-  // 行0, レーン0:
+  // Row 0, Lane 0:
   $5  <- @call("not", $1);      // NOT A(1,0)
   $5  <- @mul(0: $5, $2);        // (NOT A(1,0)) AND A(2,0)
-  $0  <- @add(0: $0, $5);        // A(0,0) XOR (...) → 新A(0,0)
+  $0  <- @add(0: $0, $5);        // A(0,0) XOR (...) → new A(0,0)
   
-  // 行0, レーン1:
+  // Row 0, Lane 1:
   $6  <- @call("not", $2);      // NOT A(2,0)
   $6  <- @mul(0: $6, $3);        // (NOT A(2,0)) AND A(3,0)
   $1  <- @add(0: $1, $6);
   
-  // 行0, レーン2:
+  // Row 0, Lane 2:
   $7  <- @call("not", $3);      // NOT A(3,0)
   $7  <- @mul(0: $7, $4);        // (NOT A(3,0)) AND A(4,0)
   $2  <- @add(0: $2, $7);
   
-  // 行0, レーン3:
+  // Row 0, Lane 3:
   $8  <- @call("not", $4);      // NOT A(4,0)
-  $8  <- @mul(0: $8, $0);        // (NOT A(4,0)) AND A(0,0)　※ラップアラウンド
+  $8  <- @mul(0: $8, $0);        // (NOT A(4,0)) AND A(0,0) ※Wrap around
   $3  <- @add(0: $3, $8);
   
-  // 行0, レーン4:
+  // Row 0, Lane 4:
   $9  <- @call("not", $0);      // NOT A(0,0)
   $9  <- @mul(0: $9, $1);        // (NOT A(0,0)) AND A(1,0)
-  $4  <- @add(0: $4, $9);
+  $4  <- @add(极: $4, $9);
   
-  // 同様の処理を、行1（$5～$9）、行2（$10～$14）、行3（$15～$19）、行4（$20～$24）に対して実施
-  // （ここでは省略。実際の回路では各行について同様に各レーンの更新制約を記述してください）
+  // Row 1, Lane 0:
+  $10 <- @call("not", $6);      // NOT A(1,1)
+  $10 <- @mul(0: $10, $7);      // (NOT A极1,1)) AND A(2,1)
+  $5  <- @add(0: $5, $10);      // A(0,1) XOR (...) → new A(0,1)
   
-  // 出力: 更新後の状態は $0 .. $24 に反映
+  // Row 1, Lane 1:
+  $11 <- @call("not", $7);      // NOT A(2,1)
+  $11 <- @mul(0: $11, $8);      // (NOT A(2,1)) AND A(3,1)
+  $6  <- @add(0: $6, $11);
+  
+  // Row 1, Lane 2:
+  $12 <- @call("not", $8);      // NOT A(3,1)
+  $12 <- @mul(0: $12, $9);      // (NOT A(3,1)) AND A(4,1)
+  $7  <- @add(0: $7, $12);
+  
+  // Row 1, Lane 3:
+  $13 <- @call("not", $9);      // NOT A(4,1)
+  $13 <- @mul(0: $13, $5);      // (NOT A(4,1)) AND A(0,1) ※Wrap around
+  $8  <- @add(0: $8, $13);
+  
+  // Row 1, Lane 4:
+  $14 <- @call("not", $极);      // NOT A(0,1)
+  $14 <- @mul(0: $14, $6);      // (NOT A(0,1)) AND A(1,1)
+  $9  <- @add(0: $9, $14);
+  
+  // Row 2, Lane 0:
+  $15 <- @call("not", $11);     // NOT A(1,2)
+  $15 <- @mul(0: $15, $12);     // (NOT A(1,2)) AND A(2,2)
+  $10 <- @add(0: $10, $15);
+  
+  // Row 2, Lane 1:
+  $16 <- @call("not", $12);     // NOT A(2,2)
+  $16 <- @mul(0: $16, $13);     // (NOT A(2,2)) AND A(3,2)
+  $11 <- @add(0: $11, $16);
+  
+  // Row 2, Lane 2:
+  $17 <- @call("not", $13);     // NOT A(3,2)
+  $17 <- @mul(0: $17, $14);     // (NOT A(3,2)) AND A(4,2)
+  $12 <- @add(0: $12, $17);
+  
+  // Row 2, Lane 3:
+  $18 <- @call("not", $14);     // NOT A(4,2)
+  $18 <- @mul(0: $18, $10);     // (NOT A(4,2)) AND A(0,2) ※Wrap around
+  $13 <- @add(0: $13, $18);
+  
+  // Row 2, Lane 4:
+  $19 <- @call("not", $10);     // NOT A(0,2)
+  $19 <- @mul(0: $19, $11);     // (NOT A(0,2)) AND A(1,2)
+  $14 <- @add(0: $14, $19);
+  
+  // Row 3, Lane 0:
+  $20 <- @call("not", $16);     // NOT A(1,3)
+  $20 <- @mul(0: $20, $17);     // (NOT A(1,3)) AND A(2,3)
+  $15 <- @add(0: $15极 $20);
+  
+  // Row 3, Lane 1:
+  $21 <- @call("not", $17);     // NOT A(2,3)
+  $21 <- @mul(0: $21, $18);     // (NOT A(2,3)) AND A(3,3)
+  $16 <- @add(0: $16, $21);
+  
+  // Row 3, Lane 2:
+  $22 <- @call("not", $18);     // NOT A(3,3)
+  $22 <- @mul(0: $22, $19);     // (NOT A(3,3)) AND A(4,3)
+  $17 <- @add(0: $17, $22);
+  
+  // Row 3, Lane 3:
+  $23 <- @call("not", $19);     // NOT A(4,3)
+  $23 <- @mul(0: $23, $15);     // (NOT A(4,3)) AND A(0,3) ※Wrap around
+  $18 <- @add(0: $18, $23);
+  
+  // Row 3, Lane 4:
+  $24 <- @call("not", $15);     // NOT A(0,3)
+  $24 <- @mul(0: $24, $16);     // (NOT A(0,3)) AND A(1,3)
+  $19 <- @add(0: $19, $24);
+  
+  // Row 4, Lane 0:
+  $25 <- @call("not", $21);     // NOT A(1,4)
+  $25 <- @mul(0: $25, $22);     // (NOT A(1,4)) AND A(2,4)
+  $20 <- @add(0: $20, $25);
+  
+  // Row 4, Lane 1:
+  $26 <- @call("not", $22);     // NOT A(2,4)
+  $26 <- @mul(0: $26, $23);     // (NOT A(2,4)) AND A(3,4)
+  $21 <- @add(0: $21, $26);
+  
+  // Row 4, Lane 2:
+  $27 <- @call("not", $23);     // NOT A(3,4)
+  $27 <- @mul(0: $27, $24);     // (NOT A(3,4)) AND A(4,4)
+  $22 <- @add(0: $22, $27);
+  
+  // 行4, レーン3:
+  $28 <- @call("not", $24);     // NOT A(4,4)
+  $28 <- @mul(0: $28, $20);     // (NOT A(4,4)) AND A(0,4)　※ラップアラウンド
+  $23 <- @add(0: $23, $28);
+  
+  // 行4, レーン4:
+  $29 <- @call("not", $20);     // NOT A(0,4)
+  $29 <- @mul(0: $29, $21);     // (NOT A(0,4)) AND A(1,4)
+  $24 <- @add(0: $24, $29);
+  
+  // output: 更新後の状態は $0 .. $24 に反映
 @end

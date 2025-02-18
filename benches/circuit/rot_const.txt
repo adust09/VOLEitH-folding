@@ -2,8 +2,8 @@ version 2.0.0;
 subcircuit "rot_const";
 @type field 2;
 @begin
-  // 入力: $0（64ビットワード）、定数回転量 <r> が与えられる
-  // 出力: $1 ← ROT($0, r)
+  // input: $0 (64-bit word), constant rotation amount <r> is given
+  // output: $1 ← ROT($0, r)
   $1 <- @call("rotate_left", $0, <r>);
-  // 結果 $1 を出力
+  // output result $1
 @end

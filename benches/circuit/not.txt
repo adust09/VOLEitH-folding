@@ -2,10 +2,10 @@ version 2.0.0;
 subcircuit "not";
 @type field 2;
 @begin
-  // 入力: $0（64ビットワード）
-  // 出力: $1 ← NOT($0)
-  // 64ビット全ビットが1である定数マスクを用いて XOR を行うことで反転を実現
-  $1 <- @constant(<0xFFFFFFFFFFFFFFFF>);  // 定数マスク
+  // input: $0 (64-bit word)
+  // output: $1 ← NOT($0)
+  // Use a constant mask with all 64 bits set to 1 to perform XOR for inversion
+  $1 <- @constant(<0xFFFFFFFFFFFFFFFF>);  // Constant mask
   $1 <- @add(0: $1, $0);  // XOR: (mask XOR A) = NOT(A)
-  // 出力 $1
+  // output $1
 @end
