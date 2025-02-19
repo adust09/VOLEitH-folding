@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# schmivitz = { git = "https://github.com/GaloisInc/swanky"}
 folding-schemes = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "folding-schemes"}
 solidity-verifiers = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "solidity-verifiers"}
+schmivitz = {git = "https://github.com/GaloisInc/swanky/tree/dev/schmivitz", package = "schmivitz"}
 
 # Arkworks family
 ark-bn254 = { version = "^0.5.0", default-features = false }
@@ -36,3 +36,6 @@ getrandom = { version = "0.2", features = ["js"] }
 [[example]]
 name = "sha256"
 path = "../examples/sha256.rs"
+
+[workspace]
+members = ["folding"]
