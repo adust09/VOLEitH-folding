@@ -1,23 +1,22 @@
 use std::{fs::File, io::Cursor, io::Write};
 
-#[test]
-fn header_cannot_include_plugins(circuit: &str) {
+use schmivitz::Proof;
+
+pub fn header_cannot_include_plugins(circuit: &str) {
     let plugin = circuit;
     let plugin_cursor = &mut Cursor::new(plugin).unwrap();
     let reader = RelationReader::new(plugin_cursor).unwrap();
     assert!(Proof::<InsecureVole>::validate_circuit_header(&reader).is_err());
 }
 
-#[test]
-fn header_cannot_include_conversions(circuit: &str) {
+pub fn header_cannot_include_conversions(circuit: &str) {
     let trivial_conversion = circuit;
     let conversion_cursor = &mut Cursor::new(trivial_conversion.as_byte());
     let reader = RelationReader::new(conversion_cursor).unwrap();
     assert!(Proof::<InsecureVole>::validate_circuit_header(&reader).is_err());
 }
 
-#[test]
-fn tiny_header_works(circuit: &str) -> eyre::Result<()> {
+pub fn tiny_header_works(circuit: &str) -> eyre::Result<()> {
     let tiny_header = circuit;
     let tiny_header_cursor = &mut Cursor::new(tiny_header.as_bytes());
     let reader = RelationReader::new(tiny_header_cursor)?;
@@ -26,12 +25,12 @@ fn tiny_header_works(circuit: &str) -> eyre::Result<()> {
 }
 
 // Get a fresh transcript
-fn transcript() -> Transcript {
+pub fn transcript() -> Transcript {
     Transcript::new(b"basic happy test transcript");
 }
 
 // Create a proof for the given circuit and input.
-fn create_proof(
+pub fn create_proof(
     circuit_bytes: &'static str,
     private_input_bytes: &'static str,
 ) -> (Result<Proof<InsecureVole>>, Cursor<&'static [u8]>) {
@@ -55,16 +54,17 @@ fn create_proof(
     )
 }
 
-#[test]
-fn prove_works_on_slightly_larger_circuit(circuit: &str, private_input_bytes: &str) -> Result<()> {
+pub fn prove_works_on_slightly_larger_circuit(
+    circuit: &str,
+    private_input_bytes: &str,
+) -> Result<()> {
     let (proof, mut small_circuit) = create_proof(circuit, private_input_bytes);
     assert!(proof?.verify(&mut small_circuit, &mut transcript()).is_ok());
 
     Ok(())
 }
 
-#[test]
-fn prover_and_verifier_must_input_the_same_transcript(
+pub fn prover_and_verifier_must_input_the_same_transcript(
     circuit: &str,
     private_input_bytes: &str,
 ) -> Result<()> {
@@ -80,7 +80,6 @@ fn prover_and_verifier_must_input_the_same_transcript(
     Ok(())
 }
 
-#[test]
 fn proof_requires_exact_number_of_challenges(
     small_circuit_bytes: &str,
     private_input_bytes: &str,
@@ -112,4 +111,128 @@ fn proof_requires_exact_number_of_challenges(
     assert!(too_few_challenges.verify(small_circuit, &mut transcript()).is_err());
 
     Ok(())
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    #[test]
+    fn not_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        // prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        // prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        // proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn not_const_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn rotate_left_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn keccak_chi_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn keccak_iota_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn keccak_rho_pi_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn keccak_theta_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
+
+    #[test]
+    fn keccak_circuit() {
+        let mut file = File::open("circuits/not.txt").expect("file cannot open");
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).expect("Failed to open the file");
+        let circuit = contents;
+
+        header_cannot_include_conversions(&circuit);
+        header_cannot_include_plugins(&circuit);
+        tiny_header_works(&circuit);
+        prove_works_on_slightly_larger_circuit(&circuit, private_input_bytes);
+        prover_and_verifier_must_input_the_same_transcript(&circuit, private_input_bytes);
+        proof_requires_exact_number_of_challenges(small_circuit_bytes, private_input_bytes);
+    }
 }
