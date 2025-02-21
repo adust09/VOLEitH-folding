@@ -1,6 +1,0 @@
-[build]
-rustflags = [
-    "-C", "target-cpu=native", "--cfg", "vectoreyes_target_cpu_native",
-]
-# Pass --html-in-header flags to rustdoc. See the script for details.
-rustdoc = "./etc/rustdoc-wrapper.sh"
