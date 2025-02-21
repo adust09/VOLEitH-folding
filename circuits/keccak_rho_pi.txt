@@ -5,10 +5,10 @@ subcircuit "keccak_rho_pi";
   // input: 25 lanes $0 .. $24
   // output: new state of 25 lanes (applying Rho and Pi simultaneously)
   // In Keccak's Rho, individual rotation offsets r[x,y] are applied to each lane,
-  // and Pi rearranges each lane to a different position.å
+  // and Pi rearranges each lane to a different position.
   //
   // Here, we process each lane as follows:
-  //    B[y, (2*x+3*y) mod 5] = ROT( A[x,y], r[x,y] )å
+  //    B[y, (2*x+3*y) mod 5] = ROT( A[x,y], r[x,y] )
   //
   // As examples, we describe some lanes using DSL.
   // The auxiliary circuit "rot_const" takes an input wire and constant rotation amount, and outputs the rotation result.

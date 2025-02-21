@@ -8,7 +8,7 @@ subcircuit "keccak_theta";
   //   $30..$34: difference D[0]..D[4]
   
   // --- Column parity calculation ---
-  // column x=0: C0 = A(0,0) XOR A(0,1) XOR A(0,2) XOR A(极,3) XOR A(0,4)
+  // column x=0: C0 = A(0,0) XOR A(0,1) XOR A(0,2) XOR A(0,3) XOR A(0,4)
   $25 <- @copy($0);
   $25 <- @add(0: $25, $5);
   $25 <- @add(0: $25, $10);
