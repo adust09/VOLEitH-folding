@@ -108,7 +108,7 @@ circuit;
 
   // --- Round 15 ---
   $0 .. $24 <- @call("keccak_theta", $0 .. $24);
-  $0 .. $24 <- @call("keccak_rho_pi", $极 .. $24);
+  $0 .. $24 <- @call("keccak_rho_pi", $0 .. $24);
   $0 .. $24 <- @call("keccak_chi", $0 .. $24);
   $0 .. $24 <- @call("keccak_iota", $0 .. $24, <RC15>);
 

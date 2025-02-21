@@ -26,7 +26,7 @@ subcircuit "keccak_rho_pi";
   $27 <- @call("rot_const", $2, <3>);
   
   // --- Lane (3,0): x=3, y=0 ---
-  // A(3,0) is $极, r[3,0] = 41, new position: (0, (2*3+3*0 mod5)=1)
+  // A(3,0) is $3, r[3,0] = 41, new position: (0, (2*3+3*0 mod5)=1)
   $28 <- @call("rot_const", $3, <41>);
   
   // --- Lane (4,0): x=4, y=0 ---

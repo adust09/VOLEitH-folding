@@ -26,17 +26,17 @@ subcircuit "keccak_chi";
   
   // Row 0, Lane 3:
   $8  <- @call("not", $4);      // NOT A(4,0)
-  $8  <- @mul(0: $8, $0);        // (NOT A(4,0)) AND A(0,0) ※Wrap around
+  $8  <- @mul(0: $8, $0);       // (NOT A(4,0)) AND A(0,0) ※Wrap around
   $3  <- @add(0: $3, $8);
   
   // Row 0, Lane 4:
   $9  <- @call("not", $0);      // NOT A(0,0)
-  $9  <- @mul(0: $9, $1);        // (NOT A(0,0)) AND A(1,0)
-  $4  <- @add(极: $4, $9);
+  $9  <- @mul(0: $9, $1);       // (NOT A(0,0)) AND A(1,0)
+  $4  <- @add(0: $4, $9);
   
   // Row 1, Lane 0:
   $10 <- @call("not", $6);      // NOT A(1,1)
-  $10 <- @mul(0: $10, $7);      // (NOT A极1,1)) AND A(2,1)
+  $10 <- @mul(0: $10, $7);      // (NOT A(1,1)) AND A(2,1)
   $5  <- @add(0: $5, $10);      // A(0,1) XOR (...) → new A(0,1)
   
   // Row 1, Lane 1:
@@ -55,7 +55,7 @@ subcircuit "keccak_chi";
   $8  <- @add(0: $8, $13);
   
   // Row 1, Lane 4:
-  $14 <- @call("not", $极);      // NOT A(0,1)
+  $14 <- @call("not", $10);     // NOT A(0,1)
   $14 <- @mul(0: $14, $6);      // (NOT A(0,1)) AND A(1,1)
   $9  <- @add(0: $9, $14);
   
@@ -87,7 +87,7 @@ subcircuit "keccak_chi";
   // Row 3, Lane 0:
   $20 <- @call("not", $16);     // NOT A(1,3)
   $20 <- @mul(0: $20, $17);     // (NOT A(1,3)) AND A(2,3)
-  $15 <- @add(0: $15极 $20);
+  $15 <- @add(0: $15 $20);
   
   // Row 3, Lane 1:
   $21 <- @call("not", $17);     // NOT A(2,3)
@@ -124,15 +124,15 @@ subcircuit "keccak_chi";
   $27 <- @mul(0: $27, $24);     // (NOT A(3,4)) AND A(4,4)
   $22 <- @add(0: $22, $27);
   
-  // 行4, レーン3:
+  // Row 4, Lane 3:
   $28 <- @call("not", $24);     // NOT A(4,4)
-  $28 <- @mul(0: $28, $20);     // (NOT A(4,4)) AND A(0,4)　※ラップアラウンド
+  $28 <- @mul(0: $28, $20);     // (NOT A(4,4)) AND A(0,4) ※Wrap around
   $23 <- @add(0: $23, $28);
   
-  // 行4, レーン4:
+  // Row 4, Lane 4:
   $29 <- @call("not", $20);     // NOT A(0,4)
   $29 <- @mul(0: $29, $21);     // (NOT A(0,4)) AND A(1,4)
   $24 <- @add(0: $24, $29);
   
-  // output: 更新後の状態は $0 .. $24 に反映
+  // output: updated state is stored in $0 .. $24
 @end
