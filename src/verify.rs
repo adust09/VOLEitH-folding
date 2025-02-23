@@ -1,6 +1,6 @@
 pub mod folding;
 
-use crate::verification::folding::VOLEVerificationCircuit;
+use crate::verify::folding::VOLEVerificationCircuit;
 use ark_relations::r1cs::ConstraintSynthesizer;
 use rand::{thread_rng, Rng};
 
@@ -34,7 +34,7 @@ mod tests {
         use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
         use rand::{thread_rng, Rng};
 
-        use crate::verification::folding::VOLEVerificationCircuit;
+        use crate::verify::folding::VOLEVerificationCircuit;
 
         fn test_generate_delta_generic<F: ark_ff::PrimeField>() {
             let mut rng = rand::thread_rng();

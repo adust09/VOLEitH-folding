@@ -1,4 +1,4 @@
-mod proof;
-mod verification;
+mod prove;
+mod verify;
 
 fn main() {}
