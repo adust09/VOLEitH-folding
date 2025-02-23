@@ -1,9 +1,8 @@
 use eyre::Result;
 use merlin::Transcript;
 use rand::thread_rng;
-use schmivitz::Proof;
-use std::path::Path;
-use std::{fs, io::Cursor};
+use schmivitz::{insecure::InsecureVole, Proof};
+use std::{fs, io::Cursor, path::Path};
 
 pub fn main() -> Result<()> {
     let circuit_path = Path::new("./circuits/keccak.txt");
@@ -11,14 +10,13 @@ pub fn main() -> Result<()> {
     let circuit = &mut Cursor::new(circuit_bytes.as_bytes());
 
     let private_input_path = Path::new("keccak_private_input.txt");
-    let mut private_input =
-        fs::read_to_string(private_input_path).expect("Failed to read keccak_private_input.txt");
+    // let mut private_input =
+    //     fs::read_to_string(private_input_path).expect("Failed to read keccak_private_input.txt");
 
     let mut transcript = transcript();
     let rng = &mut thread_rng();
 
-    let proof: Proof<schmivitz::vole::RandomVole> =
-        Proof::prove(circuit, private_input_path, &mut transcript, rng)?;
+    Proof::<InsecureVole>::prove::<_, _>(circuit, private_input_path, &mut transcript, rng)?;
 
     Ok(())
 }

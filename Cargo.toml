@@ -11,15 +11,14 @@ debug = true
 lto = true
 
 [dependencies]
+# Swanky family;
+schmivitz = { git = "https://github.com/adust09/swanky", rev = "f115dd4d1ba0f2f34eb18517da612805cf55f322"}
+mac-n-cheese-sieve-parser = { git = "https://github.com/adust09/swanky", rev = "f115dd4d1ba0f2f34eb18517da612805cf55f322"}
+swanky-field = { git = "https://github.com/adust09/swanky", rev = "f115dd4d1ba0f2f34eb18517da612805cf55f322"}
+swanky-field-binary = { git = "https://github.com/adust09/swanky", rev = "f115dd4d1ba0f2f34eb18517da612805cf55f322"}
 # This is the main library for the project.
 folding-schemes = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "folding-schemes" }
 solidity-verifiers = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "solidity-verifiers"}
-
-# Swanky family;
-schmivitz = { git = "https://github.com/GaloisInc/swanky", rev = "cd3862acd39631cfc463f977028d792f9fb757d8"}
-mac-n-cheese-sieve-parser = { git = "https://github.com/GaloisInc/swanky", rev = "cd3862acd39631cfc463f977028d792f9fb757d8"}
-swanky-field = { git = "https://github.com/GaloisInc/swanky", rev = "cd3862acd39631cfc463f977028d792f9fb757d8"}
-swanky-field-binary = { git = "https://github.com/GaloisInc/swanky", rev = "cd3862acd39631cfc463f977028d792f9fb757d8"}
 # Arkworks family;
 ark-bn254 = "^0.5.0"
 ark-ff = "^0.5.0"
@@ -30,7 +29,6 @@ eyre = "0.6.12"
 tempfile = "3.14.0"
 rand = "0.8.5"
 merlin = "3.0.0"
-
 # This allows the crate to be built when targeting WASM.
 # See more at: https://docs.rs/getrandom/#webassembly-support 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
