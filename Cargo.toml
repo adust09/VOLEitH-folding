@@ -25,9 +25,11 @@ ark-bn254 = "^0.5.0"
 ark-ff = "^0.5.0"
 ark-r1cs-std = "^0.5.0"
 ark-relations =  "^0.5.0"
+ark-bls12-381 = "^0.5.0"
 eyre = "0.6.12"
 tempfile = "3.14.0"
 rand = "0.8.5"
+merlin = "3.0.0"
 
 # This allows the crate to be built when targeting WASM.
 # See more at: https://docs.rs/getrandom/#webassembly-support 
