@@ -24,3 +24,14 @@ pub fn main() -> Result<()> {
 fn transcript() -> Transcript {
     Transcript::new(b"basic happy test transcript")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_main() {
+        let result = main();
+        assert!(result.is_ok());
+    }
+}

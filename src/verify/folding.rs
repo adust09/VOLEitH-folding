@@ -32,7 +32,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VOLEVerificationCircuit<F> {
         let mut c_delta = FpVar::zero();
         for (h, &f_val) in self.f_vals.iter().enumerate() {
             let f_var = FpVar::new_input(cs.clone(), || Ok(f_val))?;
-            let delta_exp = delta_var.clone().pow([(2 - h) as u64]);
+            let delta_exp = delta_var.clone().pow_by_constant([(2 - h) as u64])?;
             c_delta += f_var * delta_exp;
         }
 
@@ -40,7 +40,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VOLEVerificationCircuit<F> {
         let mut q_star = FpVar::zero();
         for (i, &q) in self.q_vals.iter().enumerate() {
             let q_var = FpVar::new_input(cs.clone(), || Ok(q))?;
-            let delta_exp = delta_var.clone().pow([(i) as u64]);
+            let delta_exp = delta_var.clone().pow_by_constant([(i) as u64])?;
             q_star += q_var * delta_exp;
         }
 
