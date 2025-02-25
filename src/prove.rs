@@ -9,7 +9,7 @@ pub fn main() -> Result<()> {
     let circuit_bytes = fs::read_to_string(circuit_path).expect("Failed to read keccak.txt");
     let circuit = &mut Cursor::new(circuit_bytes.as_bytes());
 
-    let private_input_path = Path::new("keccak_private_input.txt");
+    let private_input_path = Path::new("private_input.txt");
     // let mut private_input =
     //     fs::read_to_string(private_input_path).expect("Failed to read keccak_private_input.txt");
 

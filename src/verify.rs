@@ -1,207 +1,190 @@
-pub mod folding;
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(clippy::upper_case_acronyms)]
 
-use crate::verify::folding::VOLEVerificationCircuit;
-use ark_relations::r1cs::ConstraintSynthesizer;
-use rand::{thread_rng, Rng};
+use ark_bn254::{Bn254, Fr, G1Projective as Projective};
+use ark_ff::PrimeField;
+use ark_grumpkin::Projective as Projective2;
+use ark_r1cs_std::{
+    alloc::AllocVar,
+    eq::EqGadget,
+    fields::{fp::FpVar, FieldVar},
+};
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use folding_schemes::FoldingScheme;
+use folding_schemes::{
+    commitment::{kzg::KZG, pedersen::Pedersen},
+    folding::nova::{Nova, PreprocessorParam},
+    frontend::FCircuit,
+    transcript::poseidon::poseidon_canonical_config,
+    Error,
+};
+use std::{marker::PhantomData, time::Instant};
 
-pub fn verification<F: ark_ff::PrimeField>() {
-    // todo: call folding
-    use ark_relations::r1cs::ConstraintSystem;
-
-    let mut rng = thread_rng();
-    let q_vals: Vec<F> = (0..3).map(|_| F::from(rng.gen_range(1..10) as u64)).collect();
-    let delta = F::from(rng.gen_range(1..10) as u64);
-    let f_vals: Vec<F> = (0..3).map(|_| F::from(rng.gen_range(1..10) as u64)).collect();
-    let chi_vals: Vec<F> = (0..3).map(|_| F::from(rng.gen_range(1..10) as u64)).collect();
-    let a = F::from(rng.gen_range(1..10) as u64);
-    let b = F::from(rng.gen_range(1..10) as u64);
-
-    let cs = ConstraintSystem::<F>::new_ref();
-    let circuit = VOLEVerificationCircuit { q_vals, delta, f_vals, chi_vals, a, b };
-
-    circuit.generate_constraints(cs.clone()).unwrap();
-
-    assert!(cs.is_satisfied().unwrap());
-    println!("verification successful");
+#[derive(Clone, Copy, Debug)]
+pub struct VerificationFCircuit<F: PrimeField> {
+    _f: PhantomData<F>,
 }
 
-#[cfg(test)]
-mod tests {
-    mod tests {
-        use ark_bls12_381::Fr;
-        use ark_ff::Field;
-        use ark_ff::Zero;
-        use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
-        use rand::{thread_rng, Rng};
+impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
+    type Params = ();
+    type ExternalInputs = ();
+    type ExternalInputsVar = ();
 
-        use crate::verify::folding::VOLEVerificationCircuit;
-
-        fn test_generate_delta_generic<F: ark_ff::PrimeField>() {
-            let mut rng = rand::thread_rng();
-            let delta = F::from(rng.gen_range(1..10) as u64);
-            assert!(delta != F::zero(), "Delta should be a non-zero random field element.");
-        }
-
-        #[test]
-        fn test_generate_delta() {
-            let mut rng = rand::thread_rng();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            assert!(delta != Fr::zero(), "Delta should be a non-zero random field element.");
-        }
-
-        #[test]
-        fn test_compute_q_prime() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            assert!(q_vals.len() == 3, "q'_i values should be computed and stored correctly.");
-        }
-
-        #[test]
-        fn test_receive_q_prime() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let received_q_vals = q_vals.clone();
-            assert_eq!(q_vals, received_q_vals, "Verifier should receive q'_i correctly.");
-        }
-
-        #[test]
-        fn test_compute_c_delta() {
-            let mut rng = thread_rng();
-            // let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            let f_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-
-            let mut c_delta = Fr::zero();
-            for (h, f) in f_vals.iter().enumerate() {
-                c_delta += *f * delta.pow([(2 - h) as u64]);
-            }
-
-            assert!(c_delta != Fr::zero(), "c_i(Δ) should be computed correctly.");
-        }
-
-        #[test]
-        fn test_compute_q_star() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-
-            let mut q_star = Fr::zero();
-            for (i, q) in q_vals.iter().enumerate() {
-                q_star += *q * delta.pow([(i) as u64]);
-            }
-
-            assert!(q_star != Fr::zero(), "q^* should be computed correctly.");
-        }
-
-        #[test]
-        fn test_compute_tilde_c() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            let f_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let chi_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-
-            let mut c_delta = Fr::zero();
-            for (h, f) in f_vals.iter().enumerate() {
-                c_delta += *f * delta.pow([(2 - h) as u64]);
-            }
-
-            let mut q_star = Fr::zero();
-            for (i, q) in q_vals.iter().enumerate() {
-                q_star += *q * delta.pow([(i) as u64]);
-            }
-
-            let mut tilde_c = q_star;
-            for (_i, chi) in chi_vals.iter().enumerate() {
-                tilde_c += *chi * c_delta;
-            }
-
-            assert!(tilde_c != Fr::zero(), "tilde_c should be computed correctly.");
-        }
-
-        #[test]
-        fn test_final_check() {
-            let mut rng = thread_rng();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            let a = Fr::from(rng.gen_range(1..10) as u64);
-            let b = Fr::from(rng.gen_range(1..10) as u64);
-            let tilde_c = a * delta + b;
-
-            assert_eq!(tilde_c, a * delta + b, "Final check should be satisfied.");
-        }
-        #[test]
-        fn test_correct_verification() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            let f_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let chi_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let a = Fr::from(rng.gen_range(1..10) as u64);
-            let b = Fr::from(rng.gen_range(1..10) as u64);
-
-            let cs = ConstraintSystem::<Fr>::new_ref();
-            let circuit = VOLEVerificationCircuit { q_vals, delta, f_vals, chi_vals, a, b };
-
-            circuit.generate_constraints(cs.clone()).unwrap();
-            assert!(
-                cs.is_satisfied().unwrap(),
-                "VOLE Verification should pass with correct input."
-            );
-        }
-
-        #[test]
-        fn test_incorrect_verification() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta = Fr::from(rng.gen_range(1..10) as u64);
-            let f_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let chi_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let a = Fr::from(rng.gen_range(1..10) as u64);
-            let b = Fr::from(rng.gen_range(1..10) as u64) + Fr::from(1u64);
-
-            let cs = ConstraintSystem::<Fr>::new_ref();
-            let circuit = VOLEVerificationCircuit { q_vals, delta, f_vals, chi_vals, a, b };
-
-            circuit.generate_constraints(cs.clone()).unwrap();
-            assert!(
-                !cs.is_satisfied().unwrap(),
-                "VOLE Verification should fail with incorrect input."
-            );
-        }
-
-        #[test]
-        fn test_different_delta() {
-            let mut rng = thread_rng();
-            let q_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let delta1 = Fr::from(rng.gen_range(1..10) as u64);
-            let delta2 = Fr::from(rng.gen_range(1..10) as u64) + Fr::from(1u64);
-            let f_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let chi_vals: Vec<Fr> = (0..3).map(|_| Fr::from(rng.gen_range(1..10) as u64)).collect();
-            let a = Fr::from(rng.gen_range(1..10) as u64);
-            let b = Fr::from(rng.gen_range(1..10) as u64);
-
-            let cs1 = ConstraintSystem::<Fr>::new_ref();
-            let circuit1 = VOLEVerificationCircuit {
-                q_vals: q_vals.clone(),
-                delta: delta1,
-                f_vals: f_vals.clone(),
-                chi_vals: chi_vals.clone(),
-                a,
-                b,
-            };
-            circuit1.generate_constraints(cs1.clone()).unwrap();
-            let result1 = cs1.is_satisfied().unwrap();
-
-            let cs2 = ConstraintSystem::<Fr>::new_ref();
-            let circuit2 =
-                VOLEVerificationCircuit { q_vals, delta: delta2, f_vals, chi_vals, a, b };
-            circuit2.generate_constraints(cs2.clone()).unwrap();
-            let result2 = cs2.is_satisfied().unwrap();
-
-            assert_ne!(
-                result1, result2,
-                "Different Δ should result in different verification results."
-            );
-        }
+    fn new(_params: Self::Params) -> Result<Self, Error> {
+        Ok(Self { _f: PhantomData })
     }
+    fn state_len(&self) -> usize {
+        1
+    }
+    fn generate_step_constraints(
+        // this method uses self, so that each FCircuit implementation (and different frontends)
+        // can hold a state if needed to store data to generate the constraints.
+        &self,
+        _cs: ConstraintSystemRef<F>,
+        _i: usize,
+        z_i: Vec<FpVar<F>>,
+        _external_inputs: Self::ExternalInputsVar, // inputs that are not part of the state
+    ) -> Result<Vec<FpVar<F>>, SynthesisError> {
+        let circuit = VerificationCircuit {
+            q_vals: vec![],
+            delta: F::zero(),
+            f_vals: vec![],
+            chi_vals: vec![],
+            a: F::zero(),
+            b: F::zero(),
+        };
+        let out = circuit.evaluate();
+        Ok(vec![out])
+    }
+}
+pub struct VerificationCircuit<F: PrimeField> {
+    pub q_vals: Vec<F>,
+    pub delta: F,
+    pub f_vals: Vec<F>,
+    pub chi_vals: Vec<F>,
+    pub a: F,
+    pub b: F,
+}
+
+impl<F: PrimeField> VerificationCircuit<F> {
+    pub fn evaluate(&self) -> FpVar<F> {
+        use ark_relations::r1cs::ConstraintSystem;
+
+        let cs = ConstraintSystem::<F>::new_ref();
+        let circuit = VerificationCircuit {
+            delta: self.delta, //step.1
+            q_vals: self.q_vals.clone(),
+            f_vals: self.f_vals.clone(),
+            chi_vals: self.chi_vals.clone(),
+            a: self.a,
+            b: self.b,
+        };
+
+        circuit.generate_constraints(cs.clone()).unwrap();
+        assert!(cs.is_satisfied().unwrap());
+        println!("verification successful");
+
+        // 計算されたtilde_cを返す
+        let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta)).unwrap();
+        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a)).unwrap();
+        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b)).unwrap();
+        a_var * delta_var + b_var
+    }
+}
+
+impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
+    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+        // Step 3: q'_i
+        let q_vars: Vec<FpVar<F>> = self
+            .q_vals
+            .iter()
+            .map(|&q| FpVar::new_input(cs.clone(), || Ok(q)))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta))?;
+        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a))?;
+        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b))?;
+
+        // Step 4: c_i(Δ)
+        let t = self.f_vals.len();
+        let mut c_vals = Vec::with_capacity(t);
+        for i in 0..t {
+            let mut c_i = FpVar::zero();
+            for h in 0..3 {
+                let f_val = self.f_vals[i * 3 + h];
+                let f_var = FpVar::new_input(cs.clone(), || Ok(f_val))?;
+                let exp = (2 - h) as u64;
+                let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
+                c_i += f_var * delta_exp;
+            }
+            c_vals.push(c_i);
+        }
+
+        // Step 5: q^*
+        let mut q_star = FpVar::zero();
+        for (j, q_var) in q_vars.iter().enumerate() {
+            let exp = j as u64;
+            let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
+            q_star += q_var.clone() * delta_exp;
+        }
+
+        // Step 6: \tilde{c}
+        let mut tilde_c = q_star.clone();
+        for (i, &chi) in self.chi_vals.iter().enumerate() {
+            let chi_var = FpVar::new_input(cs.clone(), || Ok(chi))?;
+            tilde_c += chi_var * c_vals[i].clone();
+        }
+
+        // Step 7: \tilde{c} = \tilde{a} * Δ + \tilde{b}
+        let a_delta = a_var * delta_var;
+        let computed_c = a_delta + b_var;
+        tilde_c.enforce_equal(&computed_c)?;
+
+        Ok(())
+    }
+}
+
+pub fn main() -> Result<(), Error> {
+    let num_steps = 10;
+    let initial_state = vec![Fr::from(1_u32)];
+
+    let F_circuit = VerificationFCircuit::<Fr>::new(())?;
+
+    /// The idea here is that eventually we could replace the next line chunk that defines the
+    /// `type N = Nova<...>` by using another folding scheme that fulfills the `FoldingScheme`
+    /// trait, and the rest of our code would be working without needing to be updated.
+    type N = Nova<
+        Projective,
+        Projective2,
+        VerificationFCircuit<Fr>,
+        KZG<'static, Bn254>,
+        Pedersen<Projective2>,
+        false,
+    >;
+
+    let poseidon_config = poseidon_canonical_config::<Fr>();
+    let mut rng = rand::rngs::OsRng;
+
+    println!("Prepare Nova ProverParams & VerifierParams");
+    let nova_preprocess_params = PreprocessorParam::new(poseidon_config, F_circuit);
+    let nova_params = N::preprocess(&mut rng, &nova_preprocess_params)?;
+
+    println!("Initialize FoldingScheme");
+    let mut folding_scheme = N::init(&nova_params, F_circuit, initial_state.clone())?;
+    // compute a step of the IVC
+    for i in 0..num_steps {
+        let start = Instant::now();
+        folding_scheme.prove_step(rng, (), None)?;
+        println!("Nova::prove_step {}: {:?}", i, start.elapsed());
+    }
+
+    println!("Run the Nova's IVC verifier");
+    let ivc_proof = folding_scheme.ivc_proof();
+    N::verify(
+        nova_params.1, // Nova's verifier params
+        ivc_proof,
+    )?;
+    Ok(())
 }
