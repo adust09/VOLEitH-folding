@@ -44,7 +44,7 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
         &self,
         _cs: ConstraintSystemRef<F>,
         _i: usize,
-        z_i: Vec<FpVar<F>>,
+        _z_i: Vec<FpVar<F>>,
         _external_inputs: Self::ExternalInputsVar, // inputs that are not part of the state
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {
         let circuit = VerificationCircuit {
@@ -86,7 +86,6 @@ impl<F: PrimeField> VerificationCircuit<F> {
         assert!(cs.is_satisfied().unwrap());
         println!("verification successful");
 
-        // 計算されたtilde_cを返す
         let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta)).unwrap();
         let a_var = FpVar::new_input(cs.clone(), || Ok(self.a)).unwrap();
         let b_var = FpVar::new_input(cs.clone(), || Ok(self.b)).unwrap();
