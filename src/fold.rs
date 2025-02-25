@@ -56,9 +56,12 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
             b: F::zero(),
         };
         let out = circuit.evaluate();
+        println!("{:?}", out);
         Ok(vec![out])
     }
 }
+
+#[derive(Debug)]
 pub struct VerificationCircuit<F: PrimeField> {
     pub q_vals: Vec<F>,
     pub delta: F,
