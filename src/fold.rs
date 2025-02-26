@@ -55,7 +55,6 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
             a_tilde: F::zero(), // input from prover
             b_tilde: F::zero(), // input from prover
         };
-        let out = circuit.evaluate();
         println!("{:?}", out);
         Ok(vec![out])
     }
@@ -69,31 +68,6 @@ pub struct VerificationCircuit<F: PrimeField> {
     pub challenges: Vec<F>, // challenge values for each f~_i
     pub a_tilde: F,         // send by prover
     pub b_tilde: F,         // send by prover
-}
-
-impl<F: PrimeField> VerificationCircuit<F> {
-    pub fn evaluate(&self) -> FpVar<F> {
-        use ark_relations::r1cs::ConstraintSystem;
-
-        let cs = ConstraintSystem::<F>::new_ref();
-        let circuit = VerificationCircuit {
-            delta: self.delta, //step.1
-            q: self.q.clone(),
-            f_tilde: self.f_tilde.clone(),
-            challenges: self.challenges.clone(),
-            a_tilde: self.a_tilde,
-            b_tilde: self.b_tilde,
-        };
-
-        circuit.generate_constraints(cs.clone()).unwrap();
-        assert!(cs.is_satisfied().unwrap());
-        println!("verification successful");
-
-        let delta = FpVar::new_input(cs.clone(), || Ok(self.delta)).unwrap();
-        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a_tilde)).unwrap();
-        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b_tilde)).unwrap();
-        a_var * delta + b_var
-    }
 }
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
