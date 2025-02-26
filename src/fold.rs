@@ -4,7 +4,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
-use ark_ff::PrimeField;
+use ark_ff::{ark_ff_macros::to_sign_and_limbs, PrimeField};
 use ark_grumpkin::Projective as Projective2;
 use ark_r1cs_std::{
     alloc::AllocVar,
@@ -42,7 +42,7 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
         // this method uses self, so that each FCircuit implementation (and different frontends)
         // can hold a state if needed to store data to generate the constraints.
         &self,
-        _cs: ConstraintSystemRef<F>,
+        cs: ConstraintSystemRef<F>,
         _i: usize,
         _z_i: Vec<FpVar<F>>,
         _external_inputs: Self::ExternalInputsVar, // inputs that are not part of the state
@@ -53,10 +53,10 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
             f_tilde: vec![],
             challenges: vec![],
             a_tilde: F::zero(), // input from prover
-            b_tilde: F::zero(), // input from prover
+            b_tilde: F::zero(),
         };
-        println!("{:?}", out);
-        Ok(vec![out])
+        let constraints = circuit.generate_constraints(cs)?;
+        Ok(constraints)
     }
 }
 
@@ -73,14 +73,16 @@ pub struct VerificationCircuit<F: PrimeField> {
 impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         // Step 1
-        let delta = FpVar::new_input(cs.clone(), || Ok(self.delta))?;
+        let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta))?;
         // Step 2: q'_i
+        // easy version without using compute_q_prime and G_c
+        // this is also used in schmivitz
         let q_prime: Vec<FpVar<F>> = self
             .q
             .iter()
             .map(|&q| FpVar::new_input(cs.clone(), || Ok(q)))
             .collect::<Result<Vec<_>, _>>()?;
-
+        // step 3: lifting \Delta and q'_i
         // Step 4: c_i(Δ)
         let t = self.f_tilde.len();
         let mut c = Vec::with_capacity(t);
@@ -90,7 +92,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
                 let f = self.f_tilde[i * 3 + h]; //
                 let f_var = FpVar::new_input(cs.clone(), || Ok(f))?;
                 let exp = (2 - h) as u64;
-                let delta_exp = delta.clone().pow_by_constant(&[exp])?;
+                let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
                 c_i += f_var * delta_exp;
             }
             c.push(c_i);
@@ -100,7 +102,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
         let mut q_star = FpVar::zero();
         for (j, q_var) in q_prime.iter().enumerate() {
             let exp = j as u64;
-            let delta_exp = delta.clone().pow_by_constant(&[exp])?;
+            let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
             q_star += q_var.clone() * delta_exp;
         }
 
@@ -114,7 +116,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
         // Step 7: \tilde{c} = \tilde{a} * Δ + \tilde{b}
         let a_var = FpVar::new_input(cs.clone(), || Ok(self.a_tilde))?;
         let b_var = FpVar::new_input(cs.clone(), || Ok(self.b_tilde))?;
-        let a_delta = a_var * delta;
+        let a_delta = a_var * delta_var;
         let computed_c = a_delta + b_var;
         tilde_c.enforce_equal(&computed_c)?;
 
@@ -147,31 +149,31 @@ fn diag<F: PrimeField>(v: &Vec<F>) -> Vec<Vec<F>> {
     res
 }
 
-pub fn compute_q_prime<F: PrimeField>(Q: &[F], d: &[F], delta: &F) -> Vec<F> {
-    let l = Q.len();
+// pub fn compute_q_prime<F: PrimeField>(Q: &[F], d: &[F], delta: &F) -> Vec<F> {
+//     let l = Q.len();
 
-    let G_c = todo!(); // G_c を生成
+//     let G_c = todo!(); // G_c を生成
 
-    // 1. d^T: 1×l
-    let d_row = vec![d.to_vec()]; // 1×l
+//     // 1. d^T: 1×l
+//     let d_row = vec![d.to_vec()]; // 1×l
 
-    // 2. v = d^T × G_c (ここで G_c は l×l)
-    let v = mat_mul(&d_row, G_c); // 結果は 1×l
-                                  // 3. D = diag(Δ) (l×l)
-    let delta_vec = vec![*delta; l]; // Δをl回繰り返したベクトルを作成
-    let D = diag(&delta_vec); // 対角行列を生成
+//     // 2. v = d^T × G_c (ここで G_c は l×l)
+//     let v = mat_mul(&d_row, G_c); // 結果は 1×l
+//                                   // 3. D = diag(Δ) (l×l)
+//     let delta_vec = vec![*delta; l]; // Δをl回繰り返したベクトルを作成
+//     let D = diag(&delta_vec); // 対角行列を生成
 
-    // 4. folded = v × D (1×l)
-    let folded_matrix = mat_mul(&v, &D); // folded_matrix: 1×l
-    let folded = &folded_matrix[0]; // 1行目のベクトルを取得
+//     // 4. folded = v × D (1×l)
+//     let folded_matrix = mat_mul(&v, &D); // folded_matrix: 1×l
+//     let folded = &folded_matrix[0]; // 1行目のベクトルを取得
 
-    // 5. Q' = Q + folded (要素ごと)
-    let mut q_prime = Vec::with_capacity(l);
-    for i in 0..l {
-        q_prime.push(Q[i] + folded[i]);
-    }
-    q_prime
-}
+//     // 5. Q' = Q + folded (要素ごと)
+//     let mut q_prime = Vec::with_capacity(l);
+//     for i in 0..l {
+//         q_prime.push(Q[i] + folded[i]);
+//     }
+//     q_prime
+// }
 
 pub fn main() -> Result<(), Error> {
     let num_steps = 10;
