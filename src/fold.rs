@@ -147,6 +147,32 @@ fn diag<F: PrimeField>(v: &Vec<F>) -> Vec<Vec<F>> {
     res
 }
 
+pub fn compute_q_prime<F: PrimeField>(Q: &[F], d: &[F], delta: &F) -> Vec<F> {
+    let l = Q.len();
+
+    let G_c = todo!(); // G_c を生成
+
+    // 1. d^T: 1×l
+    let d_row = vec![d.to_vec()]; // 1×l
+
+    // 2. v = d^T × G_c (ここで G_c は l×l)
+    let v = mat_mul(&d_row, G_c); // 結果は 1×l
+                                  // 3. D = diag(Δ) (l×l)
+    let delta_vec = vec![*delta; l]; // Δをl回繰り返したベクトルを作成
+    let D = diag(&delta_vec); // 対角行列を生成
+
+    // 4. folded = v × D (1×l)
+    let folded_matrix = mat_mul(&v, &D); // folded_matrix: 1×l
+    let folded = &folded_matrix[0]; // 1行目のベクトルを取得
+
+    // 5. Q' = Q + folded (要素ごと)
+    let mut q_prime = Vec::with_capacity(l);
+    for i in 0..l {
+        q_prime.push(Q[i] + folded[i]);
+    }
+    q_prime
+}
+
 pub fn main() -> Result<(), Error> {
     let num_steps = 10;
     let initial_state = vec![Fr::from(1_u32)];
