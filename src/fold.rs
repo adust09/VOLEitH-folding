@@ -4,7 +4,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
-use ark_ff::{ark_ff_macros::to_sign_and_limbs, PrimeField};
+use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
 use ark_r1cs_std::{
     alloc::AllocVar,
@@ -42,21 +42,12 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
         // this method uses self, so that each FCircuit implementation (and different frontends)
         // can hold a state if needed to store data to generate the constraints.
         &self,
-        cs: ConstraintSystemRef<F>,
+        _cs: ConstraintSystemRef<F>,
         _i: usize,
         _z_i: Vec<FpVar<F>>,
         _external_inputs: Self::ExternalInputsVar, // inputs that are not part of the state
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {
-        let circuit = VerificationCircuit {
-            delta: F::zero(), // call F_vole and get delta
-            q: vec![],        // call F_vole and get q
-            f_tilde: vec![],
-            challenges: vec![],
-            a_tilde: F::zero(), // input from prover
-            b_tilde: F::zero(),
-        };
-        let constraints = circuit.generate_constraints(cs)?;
-        Ok(constraints)
+        todo!()
     }
 }
 
