@@ -1,4 +1,5 @@
 mod fold;
+mod merkle;
 mod prove;
 
 fn main() {
