@@ -1,8 +1,8 @@
-mod fold;
 mod merkle;
 mod prove;
+mod verification;
 
 fn main() {
     // prove::main().expect("Failed to prove");
-    fold::main().expect("Failed to verify");
+    verification::main().expect("Failed to verify");
 }
