@@ -48,12 +48,12 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
         _external_inputs: Self::ExternalInputsVar, // inputs that are not part of the state
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {
         let circuit = VerificationCircuit {
-            q_vals: vec![],
-            delta: F::zero(),
-            f_vals: vec![],
-            chi_vals: vec![],
-            a: F::zero(),
-            b: F::zero(),
+            delta: F::zero(), // call F_vole and get delta
+            q: vec![],        // call F_vole and get q
+            f_tilde: vec![],
+            challenges: vec![],
+            a_tilde: F::zero(), // input from prover
+            b_tilde: F::zero(), // input from prover
         };
         let out = circuit.evaluate();
         println!("{:?}", out);
@@ -63,12 +63,12 @@ impl<F: PrimeField> FCircuit<F> for VerificationFCircuit<F> {
 
 #[derive(Debug)]
 pub struct VerificationCircuit<F: PrimeField> {
-    pub q_vals: Vec<F>,
-    pub delta: F,
-    pub f_vals: Vec<F>,
-    pub chi_vals: Vec<F>,
-    pub a: F,
-    pub b: F,
+    pub delta: F,           // generate at step.1
+    pub q: Vec<F>,          // generate at step.2 (q'1,...,q'l)
+    pub f_tilde: Vec<F>,    // [f̄_{i,0}, f̄_{i,1}, f̄_{i,2}] for each f~_i
+    pub challenges: Vec<F>, // challenge values for each f~_i
+    pub a_tilde: F,         // send by prover
+    pub b_tilde: F,         // send by prover
 }
 
 impl<F: PrimeField> VerificationCircuit<F> {
@@ -78,69 +78,69 @@ impl<F: PrimeField> VerificationCircuit<F> {
         let cs = ConstraintSystem::<F>::new_ref();
         let circuit = VerificationCircuit {
             delta: self.delta, //step.1
-            q_vals: self.q_vals.clone(),
-            f_vals: self.f_vals.clone(),
-            chi_vals: self.chi_vals.clone(),
-            a: self.a,
-            b: self.b,
+            q: self.q.clone(),
+            f_tilde: self.f_tilde.clone(),
+            challenges: self.challenges.clone(),
+            a_tilde: self.a_tilde,
+            b_tilde: self.b_tilde,
         };
 
         circuit.generate_constraints(cs.clone()).unwrap();
         assert!(cs.is_satisfied().unwrap());
         println!("verification successful");
 
-        let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta)).unwrap();
-        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a)).unwrap();
-        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b)).unwrap();
-        a_var * delta_var + b_var
+        let delta = FpVar::new_input(cs.clone(), || Ok(self.delta)).unwrap();
+        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a_tilde)).unwrap();
+        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b_tilde)).unwrap();
+        a_var * delta + b_var
     }
 }
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
-        // Step 3: q'_i
-        let q_vars: Vec<FpVar<F>> = self
-            .q_vals
+        // Step 1
+        let delta = FpVar::new_input(cs.clone(), || Ok(self.delta))?;
+        // Step 2: q'_i
+        let q_prime: Vec<FpVar<F>> = self
+            .q
             .iter()
             .map(|&q| FpVar::new_input(cs.clone(), || Ok(q)))
             .collect::<Result<Vec<_>, _>>()?;
 
-        let delta_var = FpVar::new_input(cs.clone(), || Ok(self.delta))?;
-        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a))?;
-        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b))?;
-
         // Step 4: c_i(Δ)
-        let t = self.f_vals.len();
-        let mut c_vals = Vec::with_capacity(t);
+        let t = self.f_tilde.len();
+        let mut c = Vec::with_capacity(t);
         for i in 0..t {
             let mut c_i = FpVar::zero();
             for h in 0..3 {
-                let f_val = self.f_vals[i * 3 + h];
-                let f_var = FpVar::new_input(cs.clone(), || Ok(f_val))?;
+                let f = self.f_tilde[i * 3 + h]; //
+                let f_var = FpVar::new_input(cs.clone(), || Ok(f))?;
                 let exp = (2 - h) as u64;
-                let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
+                let delta_exp = delta.clone().pow_by_constant(&[exp])?;
                 c_i += f_var * delta_exp;
             }
-            c_vals.push(c_i);
+            c.push(c_i);
         }
 
         // Step 5: q^*
         let mut q_star = FpVar::zero();
-        for (j, q_var) in q_vars.iter().enumerate() {
+        for (j, q_var) in q_prime.iter().enumerate() {
             let exp = j as u64;
-            let delta_exp = delta_var.clone().pow_by_constant(&[exp])?;
+            let delta_exp = delta.clone().pow_by_constant(&[exp])?;
             q_star += q_var.clone() * delta_exp;
         }
 
         // Step 6: \tilde{c}
         let mut tilde_c = q_star.clone();
-        for (i, &chi) in self.chi_vals.iter().enumerate() {
-            let chi_var = FpVar::new_input(cs.clone(), || Ok(chi))?;
-            tilde_c += chi_var * c_vals[i].clone();
+        for (i, &ch) in self.challenges.iter().enumerate() {
+            let chi_var = FpVar::new_input(cs.clone(), || Ok(ch))?;
+            tilde_c += chi_var * c[i].clone();
         }
 
         // Step 7: \tilde{c} = \tilde{a} * Δ + \tilde{b}
-        let a_delta = a_var * delta_var;
+        let a_var = FpVar::new_input(cs.clone(), || Ok(self.a_tilde))?;
+        let b_var = FpVar::new_input(cs.clone(), || Ok(self.b_tilde))?;
+        let a_delta = a_var * delta;
         let computed_c = a_delta + b_var;
         tilde_c.enforce_equal(&computed_c)?;
 
