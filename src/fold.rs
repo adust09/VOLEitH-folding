@@ -122,6 +122,31 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for VerificationCircuit<F> {
     }
 }
 
+fn mat_mul<F: PrimeField>(a: &Vec<Vec<F>>, b: &Vec<Vec<F>>) -> Vec<Vec<F>> {
+    let a_rows = a.len();
+    let a_cols = if a_rows > 0 { a[0].len() } else { 0 };
+    let b_cols = if !b.is_empty() { b.len() } else { 0 };
+
+    let mut res = vec![vec![F::zero(); b_cols]; a_rows];
+    for i in 0..a_rows {
+        for j in 0..b_cols {
+            for k in 0..a_cols {
+                res[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    res
+}
+
+fn diag<F: PrimeField>(v: &Vec<F>) -> Vec<Vec<F>> {
+    let n = v.len();
+    let mut res = vec![vec![F::zero(); n]; n];
+    for i in 0..n {
+        res[i][i] = v[i];
+    }
+    res
+}
+
 pub fn main() -> Result<(), Error> {
     let num_steps = 10;
     let initial_state = vec![Fr::from(1_u32)];
