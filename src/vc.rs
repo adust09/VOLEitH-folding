@@ -1,3 +1,5 @@
+// This is a simple example of how to use the Nova folding scheme to prove a Merkle proof.
+// The Tree-PRG VC using keccak as a hash function, but this example uses SHA-256 for simplicity.
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
@@ -6,7 +8,7 @@
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
 use ark_crypto_primitives::crh::{
     sha256::constraints::{Sha256Gadget, UnitVar},
-    CRHSchemeGadget,
+    CRHSchemeGadget, TwoToOneCRHScheme,
 };
 use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
@@ -87,7 +89,7 @@ impl<F: PrimeField> FCircuit<F> for MerkleProofFCircuit<F> {
     /// In the proof step, the input order of the hash changes depending on the value of is_left.
     fn generate_step_constraints(
         &self,
-        cs: ConstraintSystemRef<F>,
+        _cs: ConstraintSystemRef<F>,
         _i: usize,
         z_i: Vec<FpVar<F>>,
         ext: Self::ExternalInputsVar,
@@ -137,7 +139,7 @@ pub fn main() -> Result<(), Error> {
     let nova_params = N::preprocess(&mut rng, &nova_preprocessor_params)?;
 
     let mut folding_scheme = N::init(&nova_params, F_circuit, initial_state.clone())?;
-    for (i, external_inputs_at_step) in external_inputs.iter().enumerate() {
+    for (_i, external_inputs_at_step) in external_inputs.iter().enumerate() {
         let start = Instant::now();
         folding_scheme.prove_step(rng, external_inputs_at_step.clone(), None)?;
         println!("Nova::prove_step time: {:?}", start.elapsed());
@@ -146,9 +148,6 @@ pub fn main() -> Result<(), Error> {
 
     println!("Run the Nova's IVC verifier");
     let ivc_proof = folding_scheme.ivc_proof();
-    N::verify(
-        nova_params.1, // Nova's verifier params
-        ivc_proof,
-    )?;
+    N::verify(nova_params.1, ivc_proof)?;
     Ok(())
 }
