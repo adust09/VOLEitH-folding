@@ -17,7 +17,6 @@ use ark_r1cs_std::{
 
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use core::marker::PhantomData;
-use eyre::Ok;
 use folding_schemes::{
     commitment::{kzg::KZG, pedersen::Pedersen},
     folding::nova::PreprocessorParam,
@@ -34,10 +33,10 @@ pub struct MerkleProofStep {
     pub is_left: bool,
 }
 
-#[derive(Clone, Debug)]
-pub struct MerkleProofStepVar<F: PrimeField> {
-    pub sibling: FpVar<F>,
-    pub is_left: Boolean<F>,
+impl<F: PrimeField> Default for MerkleProofStepVar<F> {
+    fn default() -> Self {
+        Self { sibling: FpVar::Constant(F::zero()), is_left: Boolean::Constant(false) }
+    }
 }
 
 impl<F: PrimeField> AllocVar<MerkleProofStep, F> for MerkleProofStepVar<F> {
@@ -62,6 +61,11 @@ impl<F: PrimeField> AllocVar<MerkleProofStep, F> for MerkleProofStepVar<F> {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct MerkleProofStepVar<F: PrimeField> {
+    pub sibling: FpVar<F>,
+    pub is_left: Boolean<F>,
+}
 #[derive(Clone, Copy, Debug)]
 pub struct MerkleProofFCircuit<F: PrimeField> {
     _f: PhantomData<F>,
@@ -110,41 +114,41 @@ impl<F: PrimeField> FCircuit<F> for MerkleProofFCircuit<F> {
     }
 }
 
-// fn main() -> Result<(), Error> {
-//     let num_steps = 3;
-//     let initial_state = vec![Fr::from(1_u32)];
+pub fn main() -> Result<(), Error> {
+    let num_steps = 3;
+    let initial_state = vec![Fr::from(1_u32)];
 
-//     let external_inputs = vec![MerkleProofStep { sibling: [0u8; 32], is_left: true }];
+    let external_inputs = vec![MerkleProofStep { sibling: [0u8; 32], is_left: true }];
 
-//     let F_circuit = MerkleProofFCircuit::<Fr>::new(())?;
+    let F_circuit = MerkleProofFCircuit::<Fr>::new(())?;
 
-//     type N = Nova<
-//         Projective,
-//         Projective2,
-//         MerkleProofFCircuit<Fr>,
-//         KZG<'static, Bn254>,
-//         Pedersen<Projective2>,
-//         false,
-//     >;
-//     let poseidon_config = poseidon_canonical_config::<Fr>();
-//     let mut rng = rand::rngs::OsRng;
+    type N = Nova<
+        Projective,
+        Projective2,
+        MerkleProofFCircuit<Fr>,
+        KZG<'static, Bn254>,
+        Pedersen<Projective2>,
+        false,
+    >;
+    let poseidon_config = poseidon_canonical_config::<Fr>();
+    let mut rng = rand::rngs::OsRng;
 
-//     let nova_preprocessor_params = PreprocessorParam::new(poseidon_config, F_circuit);
-//     let nova_params = N::preprocess(&mut rng, &nova_preprocessor_params)?;
+    let nova_preprocessor_params = PreprocessorParam::new(poseidon_config, F_circuit);
+    let nova_params = N::preprocess(&mut rng, &nova_preprocessor_params)?;
 
-//     let mut folding_scheme = N::init(&nova_params, F_circuit, initial_state.clone())?;
-//     for (i, external_inputs_at_step) in external_inputs.iter().enumerate() {
-//         let start = Instant::now();
-//         folding_scheme.prove_step(rng, external_inputs_at_step.clone(), None)?;
-//         println!("Nova::prove_step time: {:?}", start.elapsed());
-//     }
-//     println!("state at last step (after {} iterations): {:?}", num_steps, folding_scheme.state());
+    let mut folding_scheme = N::init(&nova_params, F_circuit, initial_state.clone())?;
+    for (i, external_inputs_at_step) in external_inputs.iter().enumerate() {
+        let start = Instant::now();
+        folding_scheme.prove_step(rng, external_inputs_at_step.clone(), None)?;
+        println!("Nova::prove_step time: {:?}", start.elapsed());
+    }
+    println!("state at last step (after {} iterations): {:?}", num_steps, folding_scheme.state());
 
-//     println!("Run the Nova's IVC verifier");
-//     let ivc_proof = folding_scheme.ivc_proof();
-//     N::verify(
-//         nova_params.1, // Nova's verifier params
-//         ivc_proof,
-//     )?;
-//     Ok(())
-// }
+    println!("Run the Nova's IVC verifier");
+    let ivc_proof = folding_scheme.ivc_proof();
+    N::verify(
+        nova_params.1, // Nova's verifier params
+        ivc_proof,
+    )?;
+    Ok(())
+}
