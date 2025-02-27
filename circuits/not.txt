@@ -1,5 +1,5 @@
 version 2.0.0;
-subcircuit "not";
+subcircuit not;
 @type field 2;
 @begin
   // input: $0 (64-bit word)

@@ -1,10 +1,10 @@
 version 2.0.0;
-subcircuit "rot1";
+subcircuit rot1;
 @type field 2;
 @begin
   // input: $0 (64-bit word)
   // output: $1 ← ROT($0, 1)
   // In reality, a circuit that decomposes 64 bits, rotates, and recomposes is needed, but here we abstract it
-  $1 <- @call("rotate_left", $0, <1>);
+  $1 <- @call(rotate_left, $0, <1>);
   // output result $1
 @end

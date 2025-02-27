@@ -1,5 +1,5 @@
 version 2.0.0;
-subcircuit "keccak_iota";
+subcircuit keccak_iota;
 @type field 2;
 @begin
   // input: state $0 .. $24 and round constant <RC> (constant parameter)

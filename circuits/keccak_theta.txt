@@ -1,5 +1,5 @@
 version 2.0.0;
-subcircuit "keccak_theta";
+subcircuit keccak_theta;
 @type field 2;
 @begin
   // input: 25 lane state $0 .. $24 (each lane is 64-bit word)
@@ -46,23 +46,23 @@ subcircuit "keccak_theta";
   // --- D[x] calculation ---
   // D[x] = C[x-1] XOR ROT(C[x+1], 1) (indices modulo 5)
   // Example: D0 = C4 XOR ROT(C1, 1)
-  $30 <- @call("rot1", $26);  // ROT(C1,1)
+  $30 <- @call(rot1, $26);  // ROT(C1,1)
   $30 <- @add(0: $30, $29);    // D0 = C4 XOR (rotated C1)
   
   // D1 = C0 XOR ROT(C2, 1)
-  $31 <- @call("rot1", $27);
+  $31 <- @call(rot1, $27);
   $31 <- @add(0: $31, $25);
   
   // D2 = C1 XOR ROT(C3, 1)
-  $32 <- @call("rot1", $28);
+  $32 <- @call(rot1, $28);
   $32 <- @add(0: $32, $26);
   
   // D3 = C2 XOR ROT(C4, 1)
-  $33 <- @call("rot1", $29);
+  $33 <- @call(rot1, $29);
   $33 <- @add(0: $33, $27);
   
   // D4 = C3 XOR ROT(C0, 1)
-  $34 <- @call("rot1", $25);
+  $34 <- @call(rot1, $25);
   $34 <- @add(0: $34, $28);
   
   // --- State update ---
