@@ -7,8 +7,11 @@
 
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
 use ark_crypto_primitives::crh::{
-    sha256::constraints::{Sha256Gadget, UnitVar},
-    CRHSchemeGadget, TwoToOneCRHScheme,
+    sha256::{
+        constraints::{Sha256Gadget, UnitVar},
+        Sha256,
+    },
+    CRHScheme, TwoToOneCRHScheme, TwoToOneCRHSchemeGadget,
 };
 use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
@@ -68,6 +71,158 @@ pub struct MerkleProofStepVar<F: PrimeField> {
     pub sibling: FpVar<F>,
     pub is_left: Boolean<F>,
 }
+// Define a concrete implementation of TwoToOneCRHScheme using Sha256
+#[derive(Clone, Debug)]
+pub struct MerkleCRH;
+
+impl TwoToOneCRHScheme for MerkleCRH {
+    type Parameters = ();
+    type Input = [u8; 32];
+    type Output = [u8; 32];
+
+    fn setup<R: rand::Rng>(_rng: &mut R) -> Result<Self::Parameters, ark_crypto_primitives::Error> {
+        Ok(())
+    }
+
+    fn evaluate<T: Borrow<Self::Input>>(
+        _parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, ark_crypto_primitives::Error> {
+        let left = left_input.borrow();
+        let right = right_input.borrow();
+
+        let mut input = left.to_vec();
+        input.extend_from_slice(right);
+
+        let digest_vec = <Sha256 as CRHScheme>::evaluate(&(), input.as_slice())?;
+
+        // Convert Vec<u8> to [u8; 32]
+        let mut digest = [0u8; 32];
+        for (i, byte) in digest_vec.iter().enumerate().take(32) {
+            digest[i] = *byte;
+        }
+
+        Ok(digest)
+    }
+
+    fn compress<T: Borrow<Self::Output>>(
+        parameters: &Self::Parameters,
+        left_input: T,
+        right_input: T,
+    ) -> Result<Self::Output, ark_crypto_primitives::Error> {
+        Self::evaluate(parameters, left_input, right_input)
+    }
+}
+
+// Define a custom type for the output of MerkleCRHGadget
+#[derive(Clone, Debug)]
+pub struct DigestVar<F: PrimeField>(pub Vec<UInt8<F>>);
+
+impl<F: PrimeField> AllocVar<[u8; 32], F> for DigestVar<F> {
+    fn new_variable<T: Borrow<[u8; 32]>>(
+        cs: impl Into<ark_relations::r1cs::Namespace<F>>,
+        f: impl FnOnce() -> Result<T, SynthesisError>,
+        mode: ark_r1cs_std::alloc::AllocationMode,
+    ) -> Result<Self, SynthesisError> {
+        let ns = cs.into();
+        let cs = ns.cs();
+        let bytes = f()?;
+        let bytes_as_vec = bytes.borrow().to_vec();
+
+        let mut byte_vars = Vec::with_capacity(32);
+        for byte in bytes_as_vec.iter() {
+            byte_vars.push(UInt8::new_variable(cs.clone(), || Ok(byte), mode)?);
+        }
+
+        Ok(DigestVar(byte_vars))
+    }
+}
+
+impl<F: PrimeField> EqGadget<F> for DigestVar<F> {
+    fn is_eq(&self, other: &Self) -> Result<Boolean<F>, SynthesisError> {
+        // Check if all bytes are equal
+        let mut eq_checks = Vec::new();
+        for (a, b) in self.0.iter().zip(other.0.iter()) {
+            eq_checks.push(a.is_eq(b)?);
+        }
+
+        // Use Boolean::kary_and to combine all equality checks
+        Boolean::kary_and(&eq_checks)
+    }
+}
+
+impl<F: PrimeField> R1CSVar<F> for DigestVar<F> {
+    type Value = [u8; 32];
+
+    fn cs(&self) -> ark_relations::r1cs::ConstraintSystemRef<F> {
+        self.0[0].cs()
+    }
+
+    fn value(&self) -> Result<Self::Value, SynthesisError> {
+        let mut result = [0u8; 32];
+        for (i, byte) in self.0.iter().enumerate().take(32) {
+            result[i] = byte.value()?;
+        }
+        Ok(result)
+    }
+}
+
+impl<F: PrimeField> ToBytesGadget<F> for DigestVar<F> {
+    fn to_bytes_le(&self) -> Result<Vec<UInt8<F>>, SynthesisError> {
+        Ok(self.0.clone())
+    }
+}
+
+impl<F: PrimeField> CondSelectGadget<F> for DigestVar<F> {
+    fn conditionally_select(
+        cond: &Boolean<F>,
+        true_value: &Self,
+        false_value: &Self,
+    ) -> Result<Self, SynthesisError> {
+        let mut result = Vec::with_capacity(32);
+        for (a, b) in true_value.0.iter().zip(false_value.0.iter()) {
+            result.push(UInt8::conditionally_select(cond, a, b)?);
+        }
+        Ok(DigestVar(result))
+    }
+}
+
+// Define the corresponding gadget for MerkleCRH
+#[derive(Clone, Debug)]
+pub struct MerkleCRHGadget;
+
+impl<F: PrimeField> TwoToOneCRHSchemeGadget<MerkleCRH, F> for MerkleCRHGadget {
+    type InputVar = DigestVar<F>;
+    type OutputVar = DigestVar<F>;
+    type ParametersVar = ();
+
+    fn evaluate(
+        _parameters: &Self::ParametersVar,
+        left_input: &Self::InputVar,
+        right_input: &Self::InputVar,
+    ) -> Result<Self::OutputVar, SynthesisError> {
+        let mut input = left_input.0.clone();
+        input.extend_from_slice(&right_input.0);
+
+        let unit_var = UnitVar::default();
+        let digest =
+            <Sha256Gadget<F> as ark_crypto_primitives::crh::CRHSchemeGadget<Sha256, F>>::evaluate(
+                &unit_var, &input,
+            )?;
+
+        Ok(DigestVar(digest.0))
+    }
+
+    fn compress(
+        parameters: &Self::ParametersVar,
+        left_input: &Self::OutputVar,
+        right_input: &Self::OutputVar,
+    ) -> Result<Self::OutputVar, SynthesisError> {
+        Self::evaluate(parameters, left_input, right_input)
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct MerkleProofFCircuit<F: PrimeField> {
     _f: PhantomData<F>,
@@ -97,22 +252,44 @@ impl<F: PrimeField> FCircuit<F> for MerkleProofFCircuit<F> {
         let z_bytes = z_i[0].to_bytes_le()?;
         let sibling_bytes = ext.sibling.to_bytes_le()?;
 
-        let mut input_left = sibling_bytes.clone();
-        input_left.extend(z_bytes.clone());
-        let mut input_right = z_bytes;
-        input_right.extend(sibling_bytes);
+        // Convert bytes to DigestVar for the TwoToOneCRHScheme
+        // We need to ensure we have exactly 32 bytes for each input
+        let mut z_uint8 = Vec::new();
+        let mut sibling_uint8 = Vec::new();
 
-        let unit_var = UnitVar::default();
-        let out_left = Sha256Gadget::evaluate(&unit_var, &input_left)?;
-        let out_right = Sha256Gadget::evaluate(&unit_var, &input_right)?;
+        // Pad or truncate to 32 bytes
+        for i in 0..32 {
+            if i < z_bytes.len() {
+                z_uint8.push(z_bytes[i].clone());
+            } else {
+                z_uint8.push(UInt8::constant(0));
+            }
 
-        let out_left_field = out_left.0.to_constraint_field()?;
-        let out_right_field = out_right.0.to_constraint_field()?;
-        let selected = ext
-            .is_left
-            .select(&out_left_field[0], &out_right_field[0])
-            .map_err(|e| SynthesisError::from(e))?;
-        Ok(vec![selected])
+            if i < sibling_bytes.len() {
+                sibling_uint8.push(sibling_bytes[i].clone());
+            } else {
+                sibling_uint8.push(UInt8::constant(0));
+            }
+        }
+
+        let z_digest = DigestVar(z_uint8);
+        let sibling_digest = DigestVar(sibling_uint8);
+
+        // Use TwoToOneCRHScheme to compute the hash
+        // The order of inputs depends on whether the current node is the left or right child
+        let hash_result = DigestVar::conditionally_select(
+            &ext.is_left,
+            // If is_left is true, the sibling is on the left, current node on the right
+            &MerkleCRHGadget::evaluate(&(), &sibling_digest, &z_digest)?,
+            // If is_left is false, the current node is on the left, sibling on the right
+            &MerkleCRHGadget::evaluate(&(), &z_digest, &sibling_digest)?,
+        )?;
+
+        // Convert the DigestVar to a field element
+        let hash_bytes = hash_result.to_bytes_le()?;
+        let hash_field = hash_bytes.to_constraint_field()?;
+
+        Ok(vec![hash_field[0].clone()])
     }
 }
 
