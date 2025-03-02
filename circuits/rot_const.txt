@@ -1,9 +1,0 @@
-version 2.0.0;
-subcircuit rot_const;
-@type field 2;
-@begin
-  // input: $0 (64-bit word), constant rotation amount <r> is given
-  // output: $1 ← ROT($0, r)
-  $1 <- @call(rotate_left, $0, <r>);
-  // output result $1
-@end

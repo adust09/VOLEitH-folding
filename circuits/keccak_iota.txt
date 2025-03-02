@@ -1,9 +1,0 @@
-version 2.0.0;
-subcircuit keccak_iota;
-@type field 2;
-@begin
-  // input: state $0 .. $24 and round constant <RC> (constant parameter)
-  // In Iota, XOR the round constant to the first lane A(0,0) of the state
-  $0 <- @addc(0: $0, <RC>);
-  // output: state is reflected in $0 .. $24
-@endkw
