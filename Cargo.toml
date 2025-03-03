@@ -12,10 +12,10 @@ lto = true
 
 [dependencies]
 # Swanky family;
-schmivitz = { git = "https://github.com/adust09/swanky", rev="c00e2b2de6db361c4108dcc03bfa5906c08ee59e"}
-mac-n-cheese-sieve-parser = { git = "https://github.com/adust09/swanky",rev = "c00e2b2de6db361c4108dcc03bfa5906c08ee59e"}
-swanky-field = { git = "https://github.com/adust09/swanky",rev = "c00e2b2de6db361c4108dcc03bfa5906c08ee59e"}
-swanky-field-binary = { git = "https://github.com/adust09/swanky",rev = "c00e2b2de6db361c4108dcc03bfa5906c08ee59e"}
+schmivitz = { git = "https://github.com/adust09/swanky", rev="bde64fcf9951e8ddcaaf0cd9549d4f0b5a7b00b1"}
+mac-n-cheese-sieve-parser = { git = "https://github.com/adust09/swanky",rev = "bde64fcf9951e8ddcaaf0cd9549d4f0b5a7b00b1"}
+swanky-field = { git = "https://github.com/adust09/swanky",rev = "bde64fcf9951e8ddcaaf0cd9549d4f0b5a7b00b1"}
+swanky-field-binary = { git = "https://github.com/adust09/swanky",rev = "bde64fcf9951e8ddcaaf0cd9549d4f0b5a7b00b1"}
 # This is the main library for the project.
 folding-schemes = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "folding-schemes" }
 solidity-verifiers = { git = "https://github.com/privacy-scaling-explorations/sonobe", package = "solidity-verifiers"}
