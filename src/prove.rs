@@ -3,6 +3,7 @@ use merlin::Transcript;
 use rand::thread_rng;
 use schmivitz::parameters::FIELD_SIZE;
 use schmivitz::{insecure::InsecureVole, Proof};
+use serde_json;
 use std::{fs, io::Cursor, path::Path};
 
 pub fn main() -> Result<()> {
@@ -51,8 +52,17 @@ fn generate_and_verify_proof(field: &str) -> Result<()> {
         rng,
     )
     .wrap_err("Failed to generate proof")?;
-
     println!("Proof generation successful!");
+
+    // Write proof to file
+    let proof_path = "proof.txt";
+
+    // Create a simple representation of the proof
+    let proof_string = format!("{:?}", proof);
+    fs::write(proof_path, proof_string)
+        .wrap_err_with(|| format!("Failed to write proof to file at {}", proof_path))?;
+
+    println!("Proof written to {}", proof_path);
 
     // Verify proof
     let circuit_for_verification = &mut Cursor::new(circuit_bytes.as_bytes());
