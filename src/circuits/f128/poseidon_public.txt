@@ -1,0 +1,6 @@
+version 2.0.0;
+public_input;
+@type field 128;
+@begin
+    <42424242>;  // Expected hash value
+@end

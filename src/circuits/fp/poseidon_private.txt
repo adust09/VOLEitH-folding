@@ -1,0 +1,112 @@
+version 2.0.0;
+private_input;
+@type field 2;
+@begin
+    <1>;  // Input 1
+    <0>;  // Input 2
+    <1>;  // Input 3
+    
+    // Round constants for the first round
+    <1>;  // Round constant 0
+    <0>;  // Round constant 1
+    <1>;  // Round constant 2
+    
+    // MDS matrix coefficients for the first round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the second round
+    <0>;  // Round constant 3
+    <1>;  // Round constant 4
+    <0>;  // Round constant 5
+    
+    // MDS matrix coefficients for the second round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the third round
+    <1>;  // Round constant 6
+    <0>;  // Round constant 7
+    <1>;  // Round constant 8
+    
+    // MDS matrix coefficients for the third round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the fourth round
+    <1>;  // Round constant 9
+    <1>;  // Round constant 10
+    <1>;  // Round constant 11
+    
+    // MDS matrix coefficients for the fourth round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the first partial round
+    <0>;  // Round constant 12
+    <1>;  // Round constant 13
+    <0>;  // Round constant 14
+    
+    // MDS matrix coefficients for the first partial round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the second partial round
+    <1>;  // Round constant 15
+    <0>;  // Round constant 16
+    <1>;  // Round constant 17
+    
+    // MDS matrix coefficients for the second partial round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the first final round
+    <1>;  // Round constant 18
+    <0>;  // Round constant 19
+    <1>;  // Round constant 20
+    
+    // MDS matrix coefficients for the first final round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    
+    // Round constants for the second final round
+    <0>;  // Round constant 21
+    <1>;  // Round constant 22
+    <0>;  // Round constant 23
+    
+    // MDS matrix coefficients for the second final round
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <1>;  // Coefficient 3 (will be converted to 3 in F64b)
+    <0>;  // Coefficient 2 (will be converted to 2 in F64b)
+@end
