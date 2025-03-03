@@ -3,7 +3,6 @@ use merlin::Transcript;
 use rand::thread_rng;
 use schmivitz::parameters::FIELD_SIZE;
 use schmivitz::{insecure::InsecureVole, Proof};
-use serde_json;
 use std::{fs, io::Cursor, path::Path};
 
 pub fn main() -> Result<()> {
@@ -38,8 +37,6 @@ fn generate_and_verify_proof(field: &str) -> Result<()> {
     if !public_input_path.exists() {
         return Err(eyre::eyre!("Public input file does not exist at {:?}", public_input_path));
     }
-    let public_input_bytes = fs::read_to_string(public_input_path)
-        .wrap_err_with(|| format!("Failed to read public input file at {:?}", public_input_path))?;
 
     let mut transcript_instance = create_transcript();
     let rng = &mut thread_rng();
