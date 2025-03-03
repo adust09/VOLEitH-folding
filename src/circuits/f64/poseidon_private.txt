@@ -1,6 +1,6 @@
 version 2.0.0;
 private_input;
-@type field 2;
+@type field 18446744073709551616;
 @begin
     <1>;  // Input 1
     <0>;  // Input 2

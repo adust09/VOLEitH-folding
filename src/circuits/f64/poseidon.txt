@@ -9,36 +9,37 @@ circuit;
 
     // Initialize state with input elements using @add with zero
     // State size: 3 elements (t=3)
-    $3 <- @add(0: $0, @private(0));  // Add zero to copy input
-    $4 <- @add(0: $1, @private(0));  // Add zero to copy input
-    $5 <- @add(0: $2, @private(0));  // Add zero to copy input
+    $3 <- @private(0);  // Zero value
+    $6 <- @add(0: $0, $3);  // Add zero to copy input
+    $7 <- @add(0: $1, $3);  // Add zero to copy input
+    $8 <- @add(0: $2, $3);  // Add zero to copy input
 
     // Round constants for the first round
-    $6 <- @private(0);  // Round constant 0
-    $7 <- @private(0);  // Round constant 1
-    $8 <- @private(0);  // Round constant 2
+    $9 <- @private(0);  // Round constant 0
+    $10 <- @private(0);  // Round constant 1
+    $11 <- @private(0);  // Round constant 2
 
     // Add round constants (ARK - Add Round Key)
-    $9 <- @add(0: $3, $6);
-    $10 <- @add(0: $4, $7);
-    $11 <- @add(0: $5, $8);
+    $12 <- @add(0: $6, $9);
+    $13 <- @add(0: $7, $10);
+    $14 <- @add(0: $8, $11);
 
     // ===== FULL ROUNDS (first set) =====
     // Typically Poseidon uses 4 full rounds at the beginning
 
     // Full Round 1
     // S-box layer (x^5 in Fp)
-    $12 <- @mul(0: $9, $9);     // x^2
-    $13 <- @mul(0: $12, $12);   // x^4
-    $14 <- @mul(0: $13, $9);    // x^5 for first state element
-    
-    $15 <- @mul(0: $10, $10);   // x^2
+    $15 <- @mul(0: $12, $12);     // x^2
     $16 <- @mul(0: $15, $15);   // x^4
-    $17 <- @mul(0: $16, $10);   // x^5 for second state element
+    $17 <- @mul(0: $16, $12);    // x^5 for first state element
     
-    $18 <- @mul(0: $11, $11);   // x^2
+    $18 <- @mul(0: $13, $13);   // x^2
     $19 <- @mul(0: $18, $18);   // x^4
-    $20 <- @mul(0: $19, $11);   // x^5 for third state element
+    $20 <- @mul(0: $19, $13);   // x^5 for second state element
+    
+    $21 <- @mul(0: $14, $14);   // x^2
+    $22 <- @mul(0: $21, $21);   // x^4
+    $23 <- @mul(0: $22, $14);   // x^5 for third state element
 
     // MDS matrix multiplication (linear layer)
     // Using a simple MDS matrix for demonstration
@@ -46,162 +47,166 @@ circuit;
     // [ 1 2 3 ]
     // [ 3 1 2 ]
     
+    // Coefficients for MDS matrix
+    $24 <- @private(0);  // Coefficient 2
+    $25 <- @private(0);  // Coefficient 3
+    
     // First row: 2*s0 + 3*s1 + 1*s2
-    $21 <- @mul(0: $14, @private(0));  // 2*s0
-    $22 <- @mul(0: $17, @private(0));  // 3*s1
-    $23 <- @add(0: $21, $22);          // 2*s0 + 3*s1
-    $24 <- @add(0: $23, $20);          // 2*s0 + 3*s1 + s2
+    $26 <- @mul(0: $17, $24);  // 2*s0
+    $27 <- @mul(0: $20, $25);  // 3*s1
+    $28 <- @add(0: $26, $27);          // 2*s0 + 3*s1
+    $29 <- @add(0: $28, $23);          // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $25 <- @mul(0: $17, @private(0));  // 2*s1
-    $26 <- @mul(0: $20, @private(0));  // 3*s2
-    $27 <- @add(0: $14, $25);          // s0 + 2*s1
-    $28 <- @add(0: $27, $26);          // s0 + 2*s1 + 3*s2
+    $30 <- @mul(0: $20, $24);  // 2*s1
+    $31 <- @mul(0: $23, $25);  // 3*s2
+    $32 <- @add(0: $17, $30);          // s0 + 2*s1
+    $33 <- @add(0: $32, $31);          // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $29 <- @mul(0: $14, @private(0));  // 3*s0
-    $30 <- @mul(0: $20, @private(0));  // 2*s2
-    $31 <- @add(0: $29, $17);          // 3*s0 + s1
-    $32 <- @add(0: $31, $30);          // 3*s0 + s1 + 2*s2
+    $34 <- @mul(0: $17, $25);  // 3*s0
+    $35 <- @mul(0: $23, $24);  // 2*s2
+    $36 <- @add(0: $34, $20);          // 3*s0 + s1
+    $37 <- @add(0: $36, $35);          // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $33 <- @private(0);  // Round constant 3
-    $34 <- @private(0);  // Round constant 4
-    $35 <- @private(0);  // Round constant 5
+    $38 <- @private(0);  // Round constant 3
+    $39 <- @private(0);  // Round constant 4
+    $40 <- @private(0);  // Round constant 5
 
     // Add round constants
-    $36 <- @add(0: $24, $33);
-    $37 <- @add(0: $28, $34);
-    $38 <- @add(0: $32, $35);
+    $41 <- @add(0: $29, $38);
+    $42 <- @add(0: $33, $39);
+    $43 <- @add(0: $37, $40);
 
     // Full Round 2
     // S-box layer (x^5 in Fp)
-    $39 <- @mul(0: $36, $36);    // x^2
-    $40 <- @mul(0: $39, $39);    // x^4
-    $41 <- @mul(0: $40, $36);    // x^5 for first state element
+    $44 <- @mul(0: $41, $41);    // x^2
+    $45 <- @mul(0: $44, $44);    // x^4
+    $46 <- @mul(0: $45, $41);    // x^5 for first state element
     
-    $42 <- @mul(0: $37, $37);    // x^2
-    $43 <- @mul(0: $42, $42);    // x^4
-    $44 <- @mul(0: $43, $37);    // x^5 for second state element
+    $47 <- @mul(0: $42, $42);    // x^2
+    $48 <- @mul(0: $47, $47);    // x^4
+    $49 <- @mul(0: $48, $42);    // x^5 for second state element
     
-    $45 <- @mul(0: $38, $38);    // x^2
-    $46 <- @mul(0: $45, $45);    // x^4
-    $47 <- @mul(0: $46, $38);    // x^5 for third state element
+    $50 <- @mul(0: $43, $43);    // x^2
+    $51 <- @mul(0: $50, $50);    // x^4
+    $52 <- @mul(0: $51, $43);    // x^5 for third state element
 
     // MDS matrix multiplication (same as before)
     // First row: 2*s0 + 3*s1 + 1*s2
-    $48 <- @mul(0: $41, @private(0));  // 2*s0
-    $49 <- @mul(0: $44, @private(0));  // 3*s1
-    $50 <- @add(0: $48, $49);          // 2*s0 + 3*s1
-    $51 <- @add(0: $50, $47);          // 2*s0 + 3*s1 + s2
+    $53 <- @mul(0: $46, $24);  // 2*s0
+    $54 <- @mul(0: $49, $25);  // 3*s1
+    $55 <- @add(0: $53, $54);          // 2*s0 + 3*s1
+    $56 <- @add(0: $55, $52);          // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $52 <- @mul(0: $44, @private(0));  // 2*s1
-    $53 <- @mul(0: $47, @private(0));  // 3*s2
-    $54 <- @add(0: $41, $52);          // s0 + 2*s1
-    $55 <- @add(0: $54, $53);          // s0 + 2*s1 + 3*s2
+    $57 <- @mul(0: $49, $24);  // 2*s1
+    $58 <- @mul(0: $52, $25);  // 3*s2
+    $59 <- @add(0: $46, $57);          // s0 + 2*s1
+    $60 <- @add(0: $59, $58);          // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $56 <- @mul(0: $41, @private(0));  // 3*s0
-    $57 <- @mul(0: $47, @private(0));  // 2*s2
-    $58 <- @add(0: $56, $44);          // 3*s0 + s1
-    $59 <- @add(0: $58, $57);          // 3*s0 + s1 + 2*s2
+    $61 <- @mul(0: $46, $25);  // 3*s0
+    $62 <- @mul(0: $52, $24);  // 2*s2
+    $63 <- @add(0: $61, $49);          // 3*s0 + s1
+    $64 <- @add(0: $63, $62);          // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $60 <- @private(0);  // Round constant 6
-    $61 <- @private(0);  // Round constant 7
-    $62 <- @private(0);  // Round constant 8
+    $65 <- @private(0);  // Round constant 6
+    $66 <- @private(0);  // Round constant 7
+    $67 <- @private(0);  // Round constant 8
 
     // Add round constants
-    $63 <- @add(0: $51, $60);
-    $64 <- @add(0: $55, $61);
-    $65 <- @add(0: $59, $62);
+    $68 <- @add(0: $56, $65);
+    $69 <- @add(0: $60, $66);
+    $70 <- @add(0: $64, $67);
 
     // Full Round 3
     // S-box layer (x^5 in Fp)
-    $66 <- @mul(0: $63, $63);    // x^2
-    $67 <- @mul(0: $66, $66);    // x^4
-    $68 <- @mul(0: $67, $63);    // x^5 for first state element
+    $71 <- @mul(0: $68, $68);    // x^2
+    $72 <- @mul(0: $71, $71);    // x^4
+    $73 <- @mul(0: $72, $68);    // x^5 for first state element
     
-    $69 <- @mul(0: $64, $64);    // x^2
-    $70 <- @mul(0: $69, $69);    // x^4
-    $71 <- @mul(0: $70, $64);    // x^5 for second state element
+    $74 <- @mul(0: $69, $69);    // x^2
+    $75 <- @mul(0: $74, $74);    // x^4
+    $76 <- @mul(0: $75, $69);    // x^5 for second state element
     
-    $72 <- @mul(0: $65, $65);    // x^2
-    $73 <- @mul(0: $72, $72);    // x^4
-    $74 <- @mul(0: $73, $65);    // x^5 for third state element
+    $77 <- @mul(0: $70, $70);    // x^2
+    $78 <- @mul(0: $77, $77);    // x^4
+    $79 <- @mul(0: $78, $70);    // x^5 for third state element
 
     // MDS matrix multiplication (same as before)
     // First row: 2*s0 + 3*s1 + 1*s2
-    $75 <- @mul(0: $68, @private(0));  // 2*s0
-    $76 <- @mul(0: $71, @private(0));  // 3*s1
-    $77 <- @add(0: $75, $76);          // 2*s0 + 3*s1
-    $78 <- @add(0: $77, $74);          // 2*s0 + 3*s1 + s2
+    $80 <- @mul(0: $73, $24);  // 2*s0
+    $81 <- @mul(0: $76, $25);  // 3*s1
+    $82 <- @add(0: $80, $81);          // 2*s0 + 3*s1
+    $83 <- @add(0: $82, $79);          // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $79 <- @mul(0: $71, @private(0));  // 2*s1
-    $80 <- @mul(0: $74, @private(0));  // 3*s2
-    $81 <- @add(0: $68, $79);          // s0 + 2*s1
-    $82 <- @add(0: $81, $80);          // s0 + 2*s1 + 3*s2
+    $84 <- @mul(0: $76, $24);  // 2*s1
+    $85 <- @mul(0: $79, $25);  // 3*s2
+    $86 <- @add(0: $73, $84);          // s0 + 2*s1
+    $87 <- @add(0: $86, $85);          // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $83 <- @mul(0: $68, @private(0));  // 3*s0
-    $84 <- @mul(0: $74, @private(0));  // 2*s2
-    $85 <- @add(0: $83, $71);          // 3*s0 + s1
-    $86 <- @add(0: $85, $84);          // 3*s0 + s1 + 2*s2
+    $88 <- @mul(0: $73, $25);  // 3*s0
+    $89 <- @mul(0: $79, $24);  // 2*s2
+    $90 <- @add(0: $88, $76);          // 3*s0 + s1
+    $91 <- @add(0: $90, $89);          // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $87 <- @private(0);  // Round constant 9
-    $88 <- @private(0);  // Round constant 10
-    $89 <- @private(0);  // Round constant 11
+    $92 <- @private(0);  // Round constant 9
+    $93 <- @private(0);  // Round constant 10
+    $94 <- @private(0);  // Round constant 11
 
     // Add round constants
-    $90 <- @add(0: $78, $87);
-    $91 <- @add(0: $82, $88);
-    $92 <- @add(0: $86, $89);
+    $95 <- @add(0: $83, $92);
+    $96 <- @add(0: $87, $93);
+    $97 <- @add(0: $91, $94);
 
     // Full Round 4
     // S-box layer (x^5 in Fp)
-    $93 <- @mul(0: $90, $90);    // x^2
-    $94 <- @mul(0: $93, $93);    // x^4
-    $95 <- @mul(0: $94, $90);    // x^5 for first state element
+    $98 <- @mul(0: $95, $95);    // x^2
+    $99 <- @mul(0: $98, $98);    // x^4
+    $100 <- @mul(0: $99, $95);    // x^5 for first state element
     
-    $96 <- @mul(0: $91, $91);    // x^2
-    $97 <- @mul(0: $96, $96);    // x^4
-    $98 <- @mul(0: $97, $91);    // x^5 for second state element
+    $101 <- @mul(0: $96, $96);    // x^2
+    $102 <- @mul(0: $101, $101);    // x^4
+    $103 <- @mul(0: $102, $96);    // x^5 for second state element
     
-    $99 <- @mul(0: $92, $92);    // x^2
-    $100 <- @mul(0: $99, $99);   // x^4
-    $101 <- @mul(0: $100, $92);  // x^5 for third state element
+    $104 <- @mul(0: $97, $97);    // x^2
+    $105 <- @mul(0: $104, $104);   // x^4
+    $106 <- @mul(0: $105, $97);  // x^5 for third state element
 
     // MDS matrix multiplication (same as before)
     // First row: 2*s0 + 3*s1 + 1*s2
-    $102 <- @mul(0: $95, @private(0));   // 2*s0
-    $103 <- @mul(0: $98, @private(0));   // 3*s1
-    $104 <- @add(0: $102, $103);         // 2*s0 + 3*s1
-    $105 <- @add(0: $104, $101);         // 2*s0 + 3*s1 + s2
+    $107 <- @mul(0: $100, $24);   // 2*s0
+    $108 <- @mul(0: $103, $25);   // 3*s1
+    $109 <- @add(0: $107, $108);         // 2*s0 + 3*s1
+    $110 <- @add(0: $109, $106);         // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $106 <- @mul(0: $98, @private(0));   // 2*s1
-    $107 <- @mul(0: $101, @private(0));  // 3*s2
-    $108 <- @add(0: $95, $106);          // s0 + 2*s1
-    $109 <- @add(0: $108, $107);         // s0 + 2*s1 + 3*s2
+    $111 <- @mul(0: $103, $24);   // 2*s1
+    $112 <- @mul(0: $106, $25);  // 3*s2
+    $113 <- @add(0: $100, $111);          // s0 + 2*s1
+    $114 <- @add(0: $113, $112);         // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $110 <- @mul(0: $95, @private(0));   // 3*s0
-    $111 <- @mul(0: $101, @private(0));  // 2*s2
-    $112 <- @add(0: $110, $98);          // 3*s0 + s1
-    $113 <- @add(0: $112, $111);         // 3*s0 + s1 + 2*s2
+    $115 <- @mul(0: $100, $25);   // 3*s0
+    $116 <- @mul(0: $106, $24);  // 2*s2
+    $117 <- @add(0: $115, $103);          // 3*s0 + s1
+    $118 <- @add(0: $117, $116);         // 3*s0 + s1 + 2*s2
 
     // Round constants for the partial rounds
-    $114 <- @private(0);  // Round constant 12
-    $115 <- @private(0);  // Round constant 13
-    $116 <- @private(0);  // Round constant 14
+    $119 <- @private(0);  // Round constant 12
+    $120 <- @private(0);  // Round constant 13
+    $121 <- @private(0);  // Round constant 14
 
     // Add round constants
-    $117 <- @add(0: $105, $114);
-    $118 <- @add(0: $109, $115);
-    $119 <- @add(0: $113, $116);
+    $122 <- @add(0: $110, $119);
+    $123 <- @add(0: $114, $120);
+    $124 <- @add(0: $118, $121);
 
     // ===== PARTIAL ROUNDS =====
     // Typically Poseidon uses around 30 partial rounds for t=3
@@ -209,154 +214,154 @@ circuit;
 
     // Partial Round 1
     // S-box layer (x^5) applied only to the first element
-    $120 <- @mul(0: $117, $117);   // x^2
-    $121 <- @mul(0: $120, $120);   // x^4
-    $122 <- @mul(0: $121, $117);   // x^5 for first state element only
+    $125 <- @mul(0: $122, $122);   // x^2
+    $126 <- @mul(0: $125, $125);   // x^4
+    $127 <- @mul(0: $126, $122);   // x^5 for first state element only
     
     // MDS matrix multiplication
     // First row: 2*s0 + 3*s1 + 1*s2
-    $123 <- @mul(0: $122, @private(0));  // 2*s0
-    $124 <- @mul(0: $118, @private(0));  // 3*s1
-    $125 <- @add(0: $123, $124);         // 2*s0 + 3*s1
-    $126 <- @add(0: $125, $119);         // 2*s0 + 3*s1 + s2
+    $128 <- @mul(0: $127, $24);  // 2*s0
+    $129 <- @mul(0: $123, $25);  // 3*s1
+    $130 <- @add(0: $128, $129);         // 2*s0 + 3*s1
+    $131 <- @add(0: $130, $124);         // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $127 <- @mul(0: $118, @private(0));  // 2*s1
-    $128 <- @mul(0: $119, @private(0));  // 3*s2
-    $129 <- @add(0: $122, $127);         // s0 + 2*s1
-    $130 <- @add(0: $129, $128);         // s0 + 2*s1 + 3*s2
+    $132 <- @mul(0: $123, $24);  // 2*s1
+    $133 <- @mul(0: $124, $25);  // 3*s2
+    $134 <- @add(0: $127, $132);         // s0 + 2*s1
+    $135 <- @add(0: $134, $133);         // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $131 <- @mul(0: $122, @private(0));  // 3*s0
-    $132 <- @mul(0: $119, @private(0));  // 2*s2
-    $133 <- @add(0: $131, $118);         // 3*s0 + s1
-    $134 <- @add(0: $133, $132);         // 3*s0 + s1 + 2*s2
+    $136 <- @mul(0: $127, $25);  // 3*s0
+    $137 <- @mul(0: $124, $24);  // 2*s2
+    $138 <- @add(0: $136, $123);         // 3*s0 + s1
+    $139 <- @add(0: $138, $137);         // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $135 <- @private(0);  // Round constant 15
-    $136 <- @private(0);  // Round constant 16
-    $137 <- @private(0);  // Round constant 17
+    $140 <- @private(0);  // Round constant 15
+    $141 <- @private(0);  // Round constant 16
+    $142 <- @private(0);  // Round constant 17
 
     // Add round constants
-    $138 <- @add(0: $126, $135);
-    $139 <- @add(0: $130, $136);
-    $140 <- @add(0: $134, $137);
+    $143 <- @add(0: $131, $140);
+    $144 <- @add(0: $135, $141);
+    $145 <- @add(0: $139, $142);
 
     // Partial Round 2
     // S-box layer (x^5) applied only to the first element
-    $141 <- @mul(0: $138, $138);   // x^2
-    $142 <- @mul(0: $141, $141);   // x^4
-    $143 <- @mul(0: $142, $138);   // x^5 for first state element only
+    $146 <- @mul(0: $143, $143);   // x^2
+    $147 <- @mul(0: $146, $146);   // x^4
+    $148 <- @mul(0: $147, $143);   // x^5 for first state element only
     
     // MDS matrix multiplication
     // First row: 2*s0 + 3*s1 + 1*s2
-    $144 <- @mul(0: $143, @private(0));  // 2*s0
-    $145 <- @mul(0: $139, @private(0));  // 3*s1
-    $146 <- @add(0: $144, $145);         // 2*s0 + 3*s1
-    $147 <- @add(0: $146, $140);         // 2*s0 + 3*s1 + s2
+    $149 <- @mul(0: $148, $24);  // 2*s0
+    $150 <- @mul(0: $144, $25);  // 3*s1
+    $151 <- @add(0: $149, $150);         // 2*s0 + 3*s1
+    $152 <- @add(0: $151, $145);         // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $148 <- @mul(0: $139, @private(0));  // 2*s1
-    $149 <- @mul(0: $140, @private(0));  // 3*s2
-    $150 <- @add(0: $143, $148);         // s0 + 2*s1
-    $151 <- @add(0: $150, $149);         // s0 + 2*s1 + 3*s2
+    $153 <- @mul(0: $144, $24);  // 2*s1
+    $154 <- @mul(0: $145, $25);  // 3*s2
+    $155 <- @add(0: $148, $153);         // s0 + 2*s1
+    $156 <- @add(0: $155, $154);         // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $152 <- @mul(0: $143, @private(0));  // 3*s0
-    $153 <- @mul(0: $140, @private(0));  // 2*s2
-    $154 <- @add(0: $152, $139);         // 3*s0 + s1
-    $155 <- @add(0: $154, $153);         // 3*s0 + s1 + 2*s2
+    $157 <- @mul(0: $148, $25);  // 3*s0
+    $158 <- @mul(0: $145, $24);  // 2*s2
+    $159 <- @add(0: $157, $144);         // 3*s0 + s1
+    $160 <- @add(0: $159, $158);         // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $156 <- @private(0);  // Round constant 18
-    $157 <- @private(0);  // Round constant 19
-    $158 <- @private(0);  // Round constant 20
+    $161 <- @private(0);  // Round constant 18
+    $162 <- @private(0);  // Round constant 19
+    $163 <- @private(0);  // Round constant 20
 
     // Add round constants
-    $159 <- @add(0: $147, $156);
-    $160 <- @add(0: $151, $157);
-    $161 <- @add(0: $155, $158);
+    $164 <- @add(0: $152, $161);
+    $165 <- @add(0: $156, $162);
+    $166 <- @add(0: $160, $163);
 
     // ===== FULL ROUNDS (final set) =====
     // Typically Poseidon uses 4 full rounds at the end
 
     // Full Round 1 (of final set)
     // S-box layer (x^5 in Fp)
-    $162 <- @mul(0: $159, $159);   // x^2
-    $163 <- @mul(0: $162, $162);   // x^4
-    $164 <- @mul(0: $163, $159);   // x^5 for first state element
+    $167 <- @mul(0: $164, $164);   // x^2
+    $168 <- @mul(0: $167, $167);   // x^4
+    $169 <- @mul(0: $168, $164);   // x^5 for first state element
     
-    $165 <- @mul(0: $160, $160);   // x^2
-    $166 <- @mul(0: $165, $165);   // x^4
-    $167 <- @mul(0: $166, $160);   // x^5 for second state element
+    $170 <- @mul(0: $165, $165);   // x^2
+    $171 <- @mul(0: $170, $170);   // x^4
+    $172 <- @mul(0: $171, $165);   // x^5 for second state element
     
-    $168 <- @mul(0: $161, $161);   // x^2
-    $169 <- @mul(0: $168, $168);   // x^4
-    $170 <- @mul(0: $169, $161);   // x^5 for third state element
+    $173 <- @mul(0: $166, $166);   // x^2
+    $174 <- @mul(0: $173, $173);   // x^4
+    $175 <- @mul(0: $174, $166);   // x^5 for third state element
 
     // MDS matrix multiplication
     // First row: 2*s0 + 3*s1 + 1*s2
-    $171 <- @mul(0: $164, @private(0));  // 2*s0
-    $172 <- @mul(0: $167, @private(0));  // 3*s1
-    $173 <- @add(0: $171, $172);         // 2*s0 + 3*s1
-    $174 <- @add(0: $173, $170);         // 2*s0 + 3*s1 + s2
+    $176 <- @mul(0: $169, $24);  // 2*s0
+    $177 <- @mul(0: $172, $25);  // 3*s1
+    $178 <- @add(0: $176, $177);         // 2*s0 + 3*s1
+    $179 <- @add(0: $178, $175);         // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $175 <- @mul(0: $167, @private(0));  // 2*s1
-    $176 <- @mul(0: $170, @private(0));  // 3*s2
-    $177 <- @add(0: $164, $175);         // s0 + 2*s1
-    $178 <- @add(0: $177, $176);         // s0 + 2*s1 + 3*s2
+    $180 <- @mul(0: $172, $24);  // 2*s1
+    $181 <- @mul(0: $175, $25);  // 3*s2
+    $182 <- @add(0: $169, $180);         // s0 + 2*s1
+    $183 <- @add(0: $182, $181);         // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $179 <- @mul(0: $164, @private(0));  // 3*s0
-    $180 <- @mul(0: $170, @private(0));  // 2*s2
-    $181 <- @add(0: $179, $167);         // 3*s0 + s1
-    $182 <- @add(0: $181, $180);         // 3*s0 + s1 + 2*s2
+    $184 <- @mul(0: $169, $25);  // 3*s0
+    $185 <- @mul(0: $175, $24);  // 2*s2
+    $186 <- @add(0: $184, $172);         // 3*s0 + s1
+    $187 <- @add(0: $186, $185);         // 3*s0 + s1 + 2*s2
 
     // Round constants for the next round
-    $183 <- @private(0);  // Round constant 21
-    $184 <- @private(0);  // Round constant 22
-    $185 <- @private(0);  // Round constant 23
+    $188 <- @private(0);  // Round constant 21
+    $189 <- @private(0);  // Round constant 22
+    $190 <- @private(0);  // Round constant 23
 
     // Add round constants
-    $186 <- @add(0: $174, $183);
-    $187 <- @add(0: $178, $184);
-    $188 <- @add(0: $182, $185);
+    $191 <- @add(0: $179, $188);
+    $192 <- @add(0: $183, $189);
+    $193 <- @add(0: $187, $190);
 
     // Full Round 2 (of final set)
     // S-box layer (x^5 in Fp)
-    $189 <- @mul(0: $186, $186);   // x^2
-    $190 <- @mul(0: $189, $189);   // x^4
-    $191 <- @mul(0: $190, $186);   // x^5 for first state element
+    $194 <- @mul(0: $191, $191);   // x^2
+    $195 <- @mul(0: $194, $194);   // x^4
+    $196 <- @mul(0: $195, $191);   // x^5 for first state element
     
-    $192 <- @mul(0: $187, $187);   // x^2
-    $193 <- @mul(0: $192, $192);   // x^4
-    $194 <- @mul(0: $193, $187);   // x^5 for second state element
+    $197 <- @mul(0: $192, $192);   // x^2
+    $198 <- @mul(0: $197, $197);   // x^4
+    $199 <- @mul(0: $198, $192);   // x^5 for second state element
     
-    $195 <- @mul(0: $188, $188);   // x^2
-    $196 <- @mul(0: $195, $195);   // x^4
-    $197 <- @mul(0: $196, $188);   // x^5 for third state element
+    $200 <- @mul(0: $193, $193);   // x^2
+    $201 <- @mul(0: $200, $200);   // x^4
+    $202 <- @mul(0: $201, $193);   // x^5 for third state element
 
     // MDS matrix multiplication
     // First row: 2*s0 + 3*s1 + 1*s2
-    $198 <- @mul(0: $191, @private(0));  // 2*s0
-    $199 <- @mul(0: $194, @private(0));  // 3*s1
-    $200 <- @add(0: $198, $199);         // 2*s0 + 3*s1
-    $201 <- @add(0: $200, $197);         // 2*s0 + 3*s1 + s2
+    $203 <- @mul(0: $196, $24);  // 2*s0
+    $204 <- @mul(0: $199, $25);  // 3*s1
+    $205 <- @add(0: $203, $204);         // 2*s0 + 3*s1
+    $206 <- @add(0: $205, $202);         // 2*s0 + 3*s1 + s2
     
     // Second row: 1*s0 + 2*s1 + 3*s2
-    $202 <- @mul(0: $194, @private(0));  // 2*s1
-    $203 <- @mul(0: $197, @private(0));  // 3*s2
-    $204 <- @add(0: $191, $202);         // s0 + 2*s1
-    $205 <- @add(0: $204, $203);         // s0 + 2*s1 + 3*s2
+    $207 <- @mul(0: $199, $24);  // 2*s1
+    $208 <- @mul(0: $202, $25);  // 3*s2
+    $209 <- @add(0: $196, $207);         // s0 + 2*s1
+    $210 <- @add(0: $209, $208);         // s0 + 2*s1 + 3*s2
     
     // Third row: 3*s0 + 1*s1 + 2*s2
-    $206 <- @mul(0: $191, @private(0));  // 3*s0
-    $207 <- @mul(0: $197, @private(0));  // 2*s2
-    $208 <- @add(0: $206, $194);         // 3*s0 + s1
-    $209 <- @add(0: $208, $207);         // 3*s0 + s1 + 2*s2
+    $211 <- @mul(0: $196, $25);  // 3*s0
+    $212 <- @mul(0: $202, $24);  // 2*s2
+    $213 <- @add(0: $211, $199);         // 3*s0 + s1
+    $214 <- @add(0: $213, $212);         // 3*s0 + s1 + 2*s2
 
     // Output the first element of the state as the hash result
     // Replace direct copy with add zero
-    $210 <- @add(0: $201, @private(0));  // Add zero to copy the output
+    $215 <- @add(0: $206, $3);  // Add zero to copy the output
 @end
