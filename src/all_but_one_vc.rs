@@ -492,7 +492,7 @@ mod tests {
         // since we're using dummy data
         assert_eq!(is_valid, false);
 
-        // Clean up the dummy file
-        std::fs::remove_file("proof.json").unwrap();
+        // Clean up the dummy file (ignore errors if the file doesn't exist)
+        let _ = std::fs::remove_file("proof.json");
     }
 }

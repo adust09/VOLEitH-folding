@@ -175,3 +175,173 @@ impl<F: PrimeField> TwoToOneCRHSchemeGadget<Blake3CRH, F> for Blake3CRHGadget {
         Self::evaluate(parameters, left_input, right_input)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ark_bn254::Fr;
+    use ark_relations::r1cs::ConstraintSystem;
+
+    #[test]
+    fn test_blake3_crh_evaluate() {
+        // Test inputs
+        let left_input = [1u8; 32];
+        let right_input = [2u8; 32];
+
+        // Compute hash using Blake3CRH
+        let result = Blake3CRH::evaluate(&(), &left_input, &right_input).unwrap();
+
+        // Ensure the result is not all zeros
+        assert_ne!(result, [0u8; 32]);
+
+        // Test determinism - same inputs should produce same output
+        let result2 = Blake3CRH::evaluate(&(), &left_input, &right_input).unwrap();
+        assert_eq!(result, result2);
+
+        // Test different inputs produce different outputs
+        let different_input = [3u8; 32];
+        let different_result = Blake3CRH::evaluate(&(), &left_input, &different_input).unwrap();
+        assert_ne!(result, different_result);
+    }
+
+    #[test]
+    fn test_blake3_crh_compress() {
+        // Test inputs
+        let left_input = [1u8; 32];
+        let right_input = [2u8; 32];
+
+        // Compute hash using compress
+        let result = Blake3CRH::compress(&(), &left_input, &right_input).unwrap();
+
+        // Compute hash using evaluate
+        let expected = Blake3CRH::evaluate(&(), &left_input, &right_input).unwrap();
+
+        // Compress should be equivalent to evaluate
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_digest_var_alloc() {
+        // Create a constraint system
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // Test input
+        let test_digest = [42u8; 32];
+
+        // Allocate the digest as a variable
+        let digest_var =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(test_digest), AllocationMode::Witness)
+                .unwrap();
+
+        // Check that the value matches the input
+        let value = digest_var.value().unwrap();
+        assert_eq!(value, test_digest);
+
+        // Check that the bytes match
+        let bytes = digest_var.to_bytes_le().unwrap();
+        assert_eq!(bytes.len(), 32);
+        for (i, byte) in bytes.iter().enumerate() {
+            assert_eq!(byte.value().unwrap(), test_digest[i]);
+        }
+    }
+
+    #[test]
+    fn test_digest_var_equality() {
+        // Create a constraint system
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // Test inputs
+        let digest1 = [1u8; 32];
+        let digest2 = [1u8; 32]; // Same as digest1
+        let digest3 = [2u8; 32]; // Different from digest1
+
+        // Allocate the digests as variables
+        let var1 =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(digest1), AllocationMode::Witness)
+                .unwrap();
+
+        let var2 =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(digest2), AllocationMode::Witness)
+                .unwrap();
+
+        let var3 =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(digest3), AllocationMode::Witness)
+                .unwrap();
+
+        // Check equality
+        let eq_result1 = var1.is_eq(&var2).unwrap();
+        let eq_result2 = var1.is_eq(&var3).unwrap();
+
+        // Same digests should be equal
+        assert!(eq_result1.value().unwrap());
+
+        // Different digests should not be equal
+        assert!(!eq_result2.value().unwrap());
+    }
+
+    #[test]
+    fn test_blake3_gadget_evaluate() {
+        // Create a constraint system
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // Test inputs
+        let left_input = [1u8; 32];
+        let right_input = [2u8; 32];
+
+        // Allocate the inputs as variables
+        let left_var =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(left_input), AllocationMode::Witness)
+                .unwrap();
+
+        let right_var =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(right_input), AllocationMode::Witness)
+                .unwrap();
+
+        // Compute hash using Blake3CRHGadget
+        let result_var = Blake3CRHGadget::evaluate(&(), &left_var, &right_var).unwrap();
+
+        // Compute expected hash using Blake3CRH
+        let expected = Blake3CRH::evaluate(&(), &left_input, &right_input).unwrap();
+
+        // Check that the gadget produces the correct result
+        let result = result_var.value().unwrap();
+        assert_eq!(result, expected);
+
+        // Check that the constraints are satisfied
+        assert!(cs.is_satisfied().unwrap());
+    }
+
+    #[test]
+    fn test_conditional_select() {
+        // Create a constraint system
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // Test inputs
+        let digest1 = [1u8; 32];
+        let digest2 = [2u8; 32];
+
+        // Allocate the digests as variables
+        let var1 =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(digest1), AllocationMode::Witness)
+                .unwrap();
+
+        let var2 =
+            DigestVar::<Fr>::new_variable(cs.clone(), || Ok(digest2), AllocationMode::Witness)
+                .unwrap();
+
+        // Test with condition = true
+        let cond_true = Boolean::new_witness(cs.clone(), || Ok(true)).unwrap();
+        let result_true = DigestVar::conditionally_select(&cond_true, &var1, &var2).unwrap();
+
+        // Test with condition = false
+        let cond_false = Boolean::new_witness(cs.clone(), || Ok(false)).unwrap();
+        let result_false = DigestVar::conditionally_select(&cond_false, &var1, &var2).unwrap();
+
+        // Check results
+        assert_eq!(result_true.value().unwrap(), digest1);
+        assert_eq!(result_false.value().unwrap(), digest2);
+
+        // Check that the constraints are satisfied
+        assert!(cs.is_satisfied().unwrap());
+    }
+}
