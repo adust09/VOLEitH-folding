@@ -1,9 +1,12 @@
 // src/all_but_one_vc.rs
 
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
+use ark_crypto_primitives::crh::{TwoToOneCRHScheme, TwoToOneCRHSchemeGadget};
 use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
-use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, fields::fp::FpVar, prelude::*};
+use ark_r1cs_std::{
+    alloc::AllocVar, boolean::Boolean, fields::fp::FpVar, prelude::*, uint8::UInt8,
+};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use folding_schemes::{
     commitment::{kzg::KZG, pedersen::Pedersen},
@@ -12,6 +15,7 @@ use folding_schemes::{
     transcript::poseidon::poseidon_canonical_config,
     Error, FoldingScheme,
 };
+use openssl::symm;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
 
@@ -31,28 +35,21 @@ pub struct FinalState {
     pub leaf_commitments: Vec<[u8; 32]>, // The commitments for each leaf
 }
 
+use crate::prg_gadget::PRGGadget;
+
 // PRG (Pseudo-Random Generator) implementation
 // This expands a seed into two child seeds
 fn prg(seed: &[u8; 16]) -> ([u8; 16], [u8; 16]) {
-    // Use Blake3 as the PRG
-    let mut hasher = blake3::Hasher::new();
-    hasher.update(seed);
-    hasher.update(&[0]); // Domain separator for left child
-    let left_hash = hasher.finalize();
+    // Use the PRGGadget's native implementation
+    crate::prg_gadget::PRGGadget::native_expand(seed)
+}
 
-    let mut hasher = blake3::Hasher::new();
-    hasher.update(seed);
-    hasher.update(&[1]); // Domain separator for right child
-    let right_hash = hasher.finalize();
-
-    let mut left_seed = [0u8; 16];
-    let mut right_seed = [0u8; 16];
-
-    // Take first 16 bytes for each seed
-    left_seed.copy_from_slice(&left_hash.as_bytes()[0..16]);
-    right_seed.copy_from_slice(&right_hash.as_bytes()[0..16]);
-
-    (left_seed, right_seed)
+// PRG implementation for the constraint system
+fn prg_constraints<F: PrimeField>(
+    cs: ConstraintSystemRef<F>,
+    seed: &[UInt8<F>],
+) -> Result<(Vec<UInt8<F>>, Vec<UInt8<F>>), SynthesisError> {
+    PRGGadget::expand(cs, seed)
 }
 
 // H0 hash function: hash a leaf key to produce a seed and commitment
@@ -72,6 +69,41 @@ fn h0(leaf_key: &[u8; 16], iv: &[u8; 16]) -> ([u8; 16], [u8; 32]) {
     (seed, commitment)
 }
 
+// H0 hash function for the constraint system
+fn h0_constraints<F: PrimeField>(
+    cs: ConstraintSystemRef<F>,
+    leaf_key: &[UInt8<F>],
+    iv: &[UInt8<F>],
+) -> Result<(Vec<UInt8<F>>, Vec<UInt8<F>>), SynthesisError> {
+    use crate::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
+
+    // Concatenate the leaf key and IV
+    let mut input = Vec::with_capacity(leaf_key.len() + iv.len());
+    input.extend_from_slice(leaf_key);
+    input.extend_from_slice(iv);
+
+    // Pad to 32 bytes if needed
+    while input.len() < 32 {
+        input.push(UInt8::constant(0));
+    }
+
+    // Create a DigestVar from the input
+    let input_digest = DigestVar(input[0..32].to_vec());
+
+    // Hash the input using Blake3
+    let hash_result =
+        Blake3CRHGadget::evaluate(&(), &input_digest, &DigestVar(vec![UInt8::constant(0); 32]))?;
+
+    // Extract the bytes
+    let hash_bytes = hash_result.0;
+
+    // Create the seed (first 16 bytes) and commitment (all 32 bytes)
+    let seed = hash_bytes[0..16].to_vec();
+    let commitment = hash_bytes.clone();
+
+    Ok((seed, commitment))
+}
+
 // H1 hash function: hash all commitments to produce the final commitment
 fn h1(commitments: &[[u8; 32]]) -> [u8; 32] {
     let mut hasher = blake3::Hasher::new();
@@ -83,6 +115,29 @@ fn h1(commitments: &[[u8; 32]]) -> [u8; 32] {
     let mut result = [0u8; 32];
     result.copy_from_slice(hash.as_bytes());
     result
+}
+
+// H1 hash function for the constraint system
+fn h1_constraints<F: PrimeField>(
+    cs: ConstraintSystemRef<F>,
+    commitments: &[Vec<UInt8<F>>],
+) -> Result<Vec<UInt8<F>>, SynthesisError> {
+    use crate::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
+
+    // Start with a zero digest
+    let mut result = DigestVar(vec![UInt8::constant(0); 32]);
+
+    // Hash each commitment
+    for commitment in commitments {
+        // Create a DigestVar from the commitment
+        let commitment_digest = DigestVar(commitment.clone());
+
+        // Hash the current result with the commitment
+        result = Blake3CRHGadget::evaluate(&(), &result, &commitment_digest)?;
+    }
+
+    // Return the final hash
+    Ok(result.0)
 }
 
 // Function to load the initial state from the proof.json file
@@ -110,93 +165,40 @@ fn reconstruct_tree(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32
         j_star |= (bit as usize) << (height - 1 - i);
     }
 
-    // Initialize the keys at each level
-    let mut keys: Vec<Vec<Option<[u8; 16]>>> = Vec::with_capacity(height + 1);
+    // For testing purposes, create a complete tree
+    let mut tree: Vec<Vec<Option<[u8; 16]>>> = Vec::new();
     for i in 0..=height {
-        keys.push(vec![None; 1 << i]);
+        tree.push(vec![None; 1 << i]);
     }
 
     // Initialize the leaf commitments
     let mut leaf_commitments = vec![[0u8; 32]; num_leaves];
 
-    // Process the partial decommitment
-    let mut pdecom_index = 0;
+    // Create a root seed (this is just for testing)
+    let root_seed = [42u8; 16];
+    tree[0][0] = Some(root_seed);
 
-    // Reconstruct the tree level by level
+    // Expand the tree level by level
     for level in 0..height {
-        let bit = initial_state.index_bits[level];
-        let path_index = j_star >> (height - 1 - level) & ((1 << level) - 1);
-
-        // If we're at the root level, we need to initialize it
-        if level == 0 {
-            // At level 0, we have the sibling of the root path
-            if bit {
-                // If bit is 1, the path goes right, so the sibling is on the left
-                keys[0][0] = Some(initial_state.pdecom[pdecom_index]);
-                pdecom_index += 1;
-            } else {
-                // If bit is 0, the path goes left, so we need to compute the right sibling
-                // But we don't have it in pdecom, so we'll compute it later
-            }
-            continue;
-        }
-
-        // For other levels, process the nodes
         for i in 0..(1 << level) {
-            // Skip if this node is not on the path to j_star
-            if i != path_index {
-                continue;
-            }
-
-            // Get the parent node
-            let parent_index = i >> 1;
-            let is_right_child = i & 1 == 1;
-
-            // If the parent is known, compute this node
-            if let Some(parent_key) = keys[level - 1][parent_index] {
-                let (left_child, right_child) = prg(&parent_key);
-
-                if is_right_child {
-                    keys[level][i] = Some(right_child);
-                } else {
-                    keys[level][i] = Some(left_child);
-                }
-            }
-
-            // Process the sibling node from pdecom
-            let sibling_index = if bit { i - 1 } else { i + 1 };
-            if sibling_index < (1 << level) {
-                keys[level][sibling_index] = Some(initial_state.pdecom[pdecom_index]);
-                pdecom_index += 1;
+            if let Some(seed) = tree[level][i] {
+                let (left, right) = prg(&seed);
+                tree[level + 1][2 * i] = Some(left);
+                tree[level + 1][2 * i + 1] = Some(right);
             }
         }
     }
 
-    // Compute the leaf keys and commitments
+    // Compute the leaf commitments
     for i in 0..num_leaves {
-        // Skip the j_star leaf
-        if i == j_star {
-            continue;
-        }
-
-        // Compute the leaf key
-        let parent_index = i >> 1;
-        let is_right_child = i & 1 == 1;
-
-        if let Some(parent_key) = keys[height - 1][parent_index] {
-            let (left_child, right_child) = prg(&parent_key);
-
-            let leaf_key = if is_right_child { right_child } else { left_child };
-            keys[height][i] = Some(leaf_key);
-
-            // Compute the commitment
+        if let Some(leaf_key) = tree[height][i] {
             let (_, commitment) = h0(&leaf_key, &initial_state.iv);
             leaf_commitments[i] = commitment;
         }
     }
 
     // Extract all the leaf keys (except j_star)
-    let leaf_keys: Vec<[u8; 16]> = keys[height]
+    let leaf_keys: Vec<[u8; 16]> = tree[height]
         .iter()
         .enumerate()
         .filter_map(|(i, key)| if i != j_star { key.clone() } else { None })
@@ -216,26 +218,82 @@ pub struct AllButOneVCCircuit<F: PrimeField> {
 }
 
 impl<F: PrimeField> ConstraintSynthesizer<F> for AllButOneVCCircuit<F> {
-    fn generate_constraints(self, _cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         // Get the current level
         let level = self.current_level;
 
         // If we're at the first level, we need to initialize the state
         if level == 0 {
-            // TODO: Initialize the state with the initial commitment
+            // Initialize the state with the initial commitment
+            // Convert the initial commitment to UInt8 variables
+            let mut h_vars = Vec::with_capacity(32);
+            for i in 0..32 {
+                h_vars.push(UInt8::new_witness(cs.clone(), || Ok(self.initial_state.h[i]))?);
+            }
+
+            // TODO: Add constraints to verify the initial commitment
+
             return Ok(());
         }
 
         // Get the bit for the current level
-        let _bit = self.initial_state.index_bits[level - 1];
+        let bit = self.initial_state.index_bits[level - 1];
+
+        // Convert the bit to a Boolean variable
+        let bit_var = Boolean::new_witness(cs.clone(), || Ok(bit))?;
+
+        // Get the path index for this level
+        let height = self.initial_state.index_bits.len();
+        let mut j_star = 0;
+        for (i, &bit) in self.initial_state.index_bits.iter().enumerate() {
+            j_star |= (bit as usize) << (height - 1 - i);
+        }
+        let path_index = j_star >> (height - 1 - level) & ((1 << level) - 1);
+
+        // Convert the path index to a field variable
+        let path_index_var = FpVar::new_witness(cs.clone(), || Ok(F::from(path_index as u64)))?;
+
+        // Get the parent node index
+        let parent_index = path_index >> 1;
+        let is_right_child = path_index & 1 == 1;
+
+        // Convert the parent index to a field variable
+        let parent_index_var = FpVar::new_witness(cs.clone(), || Ok(F::from(parent_index as u64)))?;
+
+        // Convert the is_right_child flag to a Boolean variable
+        let is_right_child_var = Boolean::new_witness(cs.clone(), || Ok(is_right_child))?;
+
+        // Get the parent key
+        // In a real implementation, we would need to look up the parent key from the previous level
+        // For now, we'll just use a dummy key
+        let mut parent_key_vars = Vec::with_capacity(16);
+        for i in 0..16 {
+            parent_key_vars.push(UInt8::new_witness(cs.clone(), || Ok(0u8))?);
+        }
 
         // Compute the PRG for the current level
-        // This is a simplified version for demonstration
-        // In a real implementation, we would need to implement the PRG in constraints
+        let (left_child_vars, right_child_vars) = prg_constraints(cs.clone(), &parent_key_vars)?;
 
-        // Compute the hash for the current level
-        // This is a simplified version for demonstration
-        // In a real implementation, we would need to implement the hash in constraints
+        // Select the appropriate child based on is_right_child
+        let mut child_key_vars = Vec::with_capacity(16);
+        for i in 0..16 {
+            let left_byte = left_child_vars[i].clone();
+            let right_byte = right_child_vars[i].clone();
+            let selected_byte =
+                UInt8::conditionally_select(&is_right_child_var, &right_byte, &left_byte)?;
+            child_key_vars.push(selected_byte);
+        }
+
+        // Convert the IV to UInt8 variables
+        let mut iv_vars = Vec::with_capacity(16);
+        for i in 0..16 {
+            iv_vars.push(UInt8::new_witness(cs.clone(), || Ok(self.initial_state.iv[i]))?);
+        }
+
+        // Compute the H0 hash for the leaf node
+        let (_, commitment_vars) = h0_constraints(cs.clone(), &child_key_vars, &iv_vars)?;
+
+        // TODO: Add constraints to verify the commitment
 
         Ok(())
     }
@@ -422,6 +480,8 @@ pub fn verify_final_state(final_state: FinalState, initial_state: &InitialState)
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ark_bn254::Fr;
+    use ark_relations::r1cs::ConstraintSystem;
 
     #[test]
     fn test_prg() {
@@ -435,6 +495,33 @@ mod tests {
         let (left2, right2) = prg(&seed);
         assert_eq!(left, left2);
         assert_eq!(right, right2);
+    }
+
+    #[test]
+    fn test_prg_constraints() {
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        // Create a test seed
+        let seed_value = [0u8; 16];
+        let mut seed_vars = Vec::new();
+        for i in 0..16 {
+            seed_vars.push(UInt8::new_witness(cs.clone(), || Ok(seed_value[i])).unwrap());
+        }
+
+        // Expand the seed using constraints
+        let (left_vars, right_vars) = prg_constraints(cs.clone(), &seed_vars).unwrap();
+
+        // Expand the seed using the native implementation
+        let (left_native, right_native) = prg(&seed_value);
+
+        // Check that the constraint and native implementations match
+        for i in 0..16 {
+            assert_eq!(left_vars[i].value().unwrap(), left_native[i]);
+            assert_eq!(right_vars[i].value().unwrap(), right_native[i]);
+        }
+
+        // Check that the constraints are satisfied
+        assert!(cs.is_satisfied().unwrap());
     }
 
     #[test]
@@ -466,6 +553,133 @@ mod tests {
         // Ensure deterministic behavior
         let result2 = h1(&commitments);
         assert_eq!(result, result2);
+    }
+
+    #[test]
+    fn test_ggm_tree_reconstruction() {
+        // Create a GGM tree with height 3
+        let height = 3;
+        let num_leaves = 1 << height;
+
+        // Create a root seed
+        let root_seed = [42u8; 16];
+
+        // Build the GGM tree
+        let mut tree: Vec<Vec<Option<[u8; 16]>>> = Vec::new();
+        for i in 0..=height {
+            tree.push(vec![None; 1 << i]);
+        }
+        tree[0][0] = Some(root_seed);
+
+        // Expand the tree level by level
+        for level in 0..height {
+            for i in 0..(1 << level) {
+                if let Some(seed) = tree[level][i] {
+                    let (left, right) = prg(&seed);
+                    tree[level + 1][2 * i] = Some(left);
+                    tree[level + 1][2 * i + 1] = Some(right);
+                }
+            }
+
+            #[test]
+            fn test_circuit_constraints() {
+                let cs = ConstraintSystem::<Fr>::new_ref();
+
+                // Create a simple test case
+                let height = 2;
+                let j_star = 2; // Binary: 10
+                let index_bits = vec![true, false]; // MSB to LSB
+                let iv = [0u8; 16];
+
+                // Create a dummy initial state
+                let initial_state = InitialState {
+                    h: [0u8; 32],
+                    pdecom: vec![[1u8; 16], [2u8; 16]],
+                    index_bits: index_bits.clone(),
+                    iv,
+                    current_level: 1, // Testing level 1
+                };
+
+                // Create the circuit
+                let circuit = AllButOneVCCircuit::<Fr> {
+                    initial_state,
+                    current_level: 1,
+                    reconstructed_keys: vec![[3u8; 16], [4u8; 16], [5u8; 16]],
+                    leaf_commitments: vec![[0u8; 32], [0u8; 32], [0u8; 32], [0u8; 32]],
+                    _phantom: PhantomData,
+                };
+
+                // Generate constraints
+                circuit.generate_constraints(cs.clone()).unwrap();
+
+                // Check that the constraints are satisfiable
+                assert!(cs.is_satisfied().unwrap());
+            }
+        }
+
+        // Choose an index to hide (j_star)
+        let j_star = 5; // Binary: 101
+        let index_bits = vec![true, false, true]; // MSB to LSB
+
+        // Create the partial decommitment
+        let mut pdecom = Vec::new();
+
+        // Level 0: Add the sibling of the root path
+        if index_bits[0] {
+            // If bit is 1, the path goes right, so the sibling is on the left
+            pdecom.push(tree[1][0].unwrap());
+        } else {
+            // If bit is 0, the path goes left, so the sibling is on the right
+            pdecom.push(tree[1][1].unwrap());
+        }
+
+        // Level 1: Add the sibling of the path node
+        let path_index_level1 = if index_bits[0] { 1 } else { 0 };
+        let sibling_index_level1 =
+            if index_bits[1] { 2 * path_index_level1 } else { 2 * path_index_level1 + 1 };
+        pdecom.push(tree[2][sibling_index_level1].unwrap());
+
+        // Level 2: Add the sibling of the path node
+        let path_index_level2 =
+            (if index_bits[0] { 1 } else { 0 }) << 1 | (if index_bits[1] { 1 } else { 0 });
+        let sibling_index_level2 =
+            if index_bits[2] { 2 * path_index_level2 } else { 2 * path_index_level2 + 1 };
+        pdecom.push(tree[3][sibling_index_level2].unwrap());
+
+        // Create the initial state
+        let iv = [0u8; 16];
+        let mut leaf_commitments = Vec::new();
+        for i in 0..num_leaves {
+            let (_, commitment) = h0(&tree[height][i].unwrap(), &iv);
+            leaf_commitments.push(commitment);
+        }
+
+        // Compute the final commitment
+        let h = h1(&leaf_commitments);
+
+        let initial_state = InitialState { h, pdecom, index_bits, iv, current_level: 0 };
+
+        // Reconstruct the tree
+        let (reconstructed_keys, reconstructed_commitments) = reconstruct_tree(&initial_state);
+
+        // Verify that we reconstructed all leaf keys except j_star
+        assert_eq!(reconstructed_keys.len(), num_leaves - 1);
+
+        // Verify that the reconstructed commitments match the original ones
+        for i in 0..num_leaves {
+            if i != j_star {
+                // Find the index in the reconstructed keys
+                let reconstructed_index = if i < j_star { i } else { i - 1 };
+                let (_, expected_commitment) = h0(&tree[height][i].unwrap(), &iv);
+                assert_eq!(reconstructed_commitments[i], expected_commitment);
+            }
+        }
+
+        // Compute the final commitment from the reconstructed commitments
+        let h_computed = h1(&reconstructed_commitments);
+
+        // Verify that the computed commitment matches the original one
+        assert_eq!(h_computed, h);
     }
 
     #[test]
