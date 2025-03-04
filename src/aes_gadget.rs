@@ -6,12 +6,10 @@
 
 use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
-use ark_r1cs_std::boolean::Boolean;
 use ark_r1cs_std::convert::ToBitsGadget;
 use ark_r1cs_std::uint8::UInt8;
 use ark_r1cs_std::{prelude::*, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use std::borrow::Borrow;
 
 // AES S-box lookup table
 const SBOX: [u8; 256] = [

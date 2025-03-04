@@ -1,7 +1,7 @@
 // src/all_but_one_vc.rs
 
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
-use ark_crypto_primitives::crh::{TwoToOneCRHScheme, TwoToOneCRHSchemeGadget};
+use ark_crypto_primitives::crh::TwoToOneCRHSchemeGadget;
 use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
 use ark_r1cs_std::{
@@ -15,7 +15,6 @@ use folding_schemes::{
     transcript::poseidon::poseidon_canonical_config,
     Error, FoldingScheme,
 };
-use openssl::symm;
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
 

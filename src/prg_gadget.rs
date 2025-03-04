@@ -5,13 +5,11 @@
 #![allow(non_camel_case_types)]
 #![allow(clippy::upper_case_acronyms)]
 
-use crate::aes_gadget::{aes_encrypt, gf_add};
 use ark_ff::PrimeField;
 use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::uint8::UInt8;
-use ark_r1cs_std::{prelude::*, R1CSVar};
+use ark_r1cs_std::R1CSVar;
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
-use std::borrow::Borrow;
 
 // AES block size in bytes
 const AES_BLOCK_SIZE: usize = 16;
