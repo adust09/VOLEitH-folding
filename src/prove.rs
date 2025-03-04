@@ -15,10 +15,11 @@ pub fn main() -> Result<()> {
     };
 
     println!("Using {} ({} field) implementation", field_type.0, field_type.1);
-    generate_and_verify_proof(field_type.1)
+    prove(field_type.1).unwrap();
+    Ok(())
 }
 
-fn generate_and_verify_proof(field: &str) -> Result<()> {
+fn prove(field: &str) -> Result<()> {
     let circuit_path_str = format!("src/circuits/{}/poseidon.txt", field);
     let circuit_path = Path::new(&circuit_path_str);
     let circuit_bytes = fs::read_to_string(circuit_path)
@@ -52,7 +53,7 @@ fn generate_and_verify_proof(field: &str) -> Result<()> {
     println!("Proof generation successful!");
 
     // Write proof to file
-    let proof_path = "proof.txt";
+    let proof_path = "proof.json";
 
     // Create a simple representation of the proof
     let proof_string = format!("{:?}", proof);
@@ -60,65 +61,7 @@ fn generate_and_verify_proof(field: &str) -> Result<()> {
         .wrap_err_with(|| format!("Failed to write proof to file at {}", proof_path))?;
 
     println!("Proof written to {}", proof_path);
-
-    // Verify proof
-    let circuit_for_verification = &mut Cursor::new(circuit_bytes.as_bytes());
-    let mut transcript_for_verification = create_transcript();
-    proof
-        .verify(circuit_for_verification, &mut transcript_for_verification)
-        .wrap_err("Failed to verify proof")?;
-
-    println!("Proof verification successful!");
-
-    // Print implementation details based on field type
-    print_implementation_details(field);
-
     Ok(())
-}
-
-fn print_implementation_details(field: &str) {
-    match field {
-        "f2" => {
-            println!("\nF_2 Poseidon hash function implementation:");
-            println!("1. Input: 3 values (1, 0, 1)");
-            println!("2. Round constants: 6 values (1, 0, 1, 1, 0, 1)");
-            println!(
-                "3. State initialization: Initialize state from input values using XOR operations"
-            );
-            println!("4. Full round 1: Non-linear layer (AND operations) and linear layer (XOR operations)");
-            println!("5. Full round 2: Non-linear layer and linear layer");
-            println!("6. Partial round: Simplified non-linear layer and linear layer");
-            println!("7. Final round: Non-linear layer and linear layer");
-            println!("8. Output: First element of the final state");
-        }
-        "f128" => {
-            println!("\nF_128 Poseidon hash function implementation:");
-            println!("1. Input: 3 values");
-            println!("2. Round constants: 30 values (3 per round)");
-            println!("3. State initialization: Initialize state with input values");
-            println!("4. Full rounds (first set): 3 rounds with S-box (x^3) applied to all state elements");
-            println!("5. Partial rounds: 4 rounds with S-box applied only to first state element");
-            println!(
-                "6. Full rounds (final set): 3 rounds with S-box applied to all state elements"
-            );
-            println!("7. MDS matrix multiplication: Applied in each round for diffusion");
-            println!("8. Output: First element of the final state");
-        }
-        "f64" => {
-            println!("\nF64 Poseidon hash function implementation:");
-            println!("1. Input: 3 values");
-            println!("2. Round constants: 24 values (3 per round)");
-            println!("3. State initialization: Initialize state with input values");
-            println!("4. Full rounds (first set): 4 rounds with S-box (x^5) applied to all state elements");
-            println!("5. Partial rounds: 2 rounds with S-box applied only to first state element");
-            println!(
-                "6. Full rounds (final set): 2 rounds with S-box applied to all state elements"
-            );
-            println!("7. MDS matrix multiplication: Applied in each round for diffusion");
-            println!("8. Output: First element of the final state");
-        }
-        _ => {}
-    }
 }
 
 fn create_transcript() -> Transcript {
