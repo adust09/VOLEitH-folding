@@ -1,4 +1,5 @@
 mod all_but_one_vc;
+mod blake3_gadget;
 mod prove;
 mod vc;
 mod vc_blake3;
