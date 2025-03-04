@@ -22,6 +22,8 @@ use folding_schemes::{
 };
 use std::{marker::PhantomData, time::Instant};
 
+use crate::all_but_one_vc::{fold_verification, load_initial_state, verify_final_state}; // Import the functions from all_but_one_vc.rs
+
 #[derive(Clone, Copy, Debug)]
 pub struct VerificationFCircuit<F: PrimeField> {
     _f: PhantomData<F>,
@@ -206,5 +208,17 @@ pub fn main() -> Result<(), Error> {
         nova_params.1, // Nova's verifier params
         ivc_proof,
     )?;
+
+    // Load the initial state from proof.json
+    let initial_state = load_initial_state("proof.json");
+
+    // Perform the folding steps
+    let final_state = fold_verification(&initial_state);
+
+    // Verify the final state
+    let is_valid = verify_final_state(final_state, &initial_state);
+
+    println!("Verification result: {}", is_valid);
+
     Ok(())
 }

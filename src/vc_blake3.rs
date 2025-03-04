@@ -26,10 +26,8 @@ use folding_schemes::{
 use folding_schemes::{folding::nova::Nova, Error};
 use std::{borrow::Borrow, time::Instant};
 
-// We need to add the blake3 crate to Cargo.toml
 // ark-crypto-primitives doesn't have a built-in blake3 implementation like it does for SHA-256
 // So we'll need to create our own implementation using the blake3 crate
-
 #[derive(Clone, Debug, Default)]
 pub struct MerkleProofStep {
     pub sibling: [u8; 32],
