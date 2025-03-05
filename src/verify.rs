@@ -21,7 +21,7 @@ use folding_schemes::{
 };
 use std::{marker::PhantomData, time::Instant};
 
-use crate::all_but_one_vc::{fold_verification, load_initial_state, verify_final_state}; // Import the functions from all_but_one_vc.rs
+use crate::all_but_one_vc::load_initial_state; // Import the functions from all_but_one_vc.rs
 
 #[derive(Clone, Copy, Debug)]
 pub struct VerificationFCircuit<F: PrimeField> {

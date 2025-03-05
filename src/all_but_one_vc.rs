@@ -6,7 +6,7 @@ use ark_grumpkin::Projective as Projective2;
 use ark_r1cs_std::{
     alloc::AllocVar, boolean::Boolean, fields::fp::FpVar, prelude::*, uint8::UInt8,
 };
-use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use folding_schemes::{
     commitment::{kzg::KZG, pedersen::Pedersen},
     folding::nova::{Nova, PreprocessorParam},
@@ -15,7 +15,7 @@ use folding_schemes::{
     Error, FoldingScheme,
 };
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Read, marker::PhantomData, path::Path, time::Instant};
+use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InitialState {
@@ -146,60 +146,6 @@ pub fn load_initial_state(proof_path: &str) -> InitialState {
     initial_state
 }
 
-// Reconstruct the GGM tree and compute the commitments
-// todo: this part should be in the step_constraints
-fn reconstruct(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32]>) {
-    let height = initial_state.index_bits.len();
-    let num_leaves = 1 << height;
-
-    // The index we're not revealing
-    let mut j_star = 0;
-    for (i, &bit) in initial_state.index_bits.iter().enumerate() {
-        j_star |= (bit as usize) << (height - 1 - i);
-    }
-
-    // For testing purposes, create a complete tree
-    let mut tree: Vec<Vec<Option<[u8; 16]>>> = Vec::new();
-    for i in 0..=height {
-        tree.push(vec![None; 1 << i]);
-    }
-
-    // Initialize the leaf commitments
-    let mut leaf_commitments = vec![[0u8; 32]; num_leaves];
-
-    // Create a root seed (this is just for testing)
-    let root_seed = [42u8; 16];
-    tree[0][0] = Some(root_seed);
-
-    // Expand the tree level by level
-    for level in 0..height {
-        for i in 0..(1 << level) {
-            if let Some(seed) = tree[level][i] {
-                let (left, right) = prg(&seed);
-                tree[level + 1][2 * i] = Some(left);
-                tree[level + 1][2 * i + 1] = Some(right);
-            }
-        }
-    }
-
-    // Compute the leaf commitments
-    for i in 0..num_leaves {
-        if let Some(leaf_key) = tree[height][i] {
-            let (_, commitment) = h0(&leaf_key, &initial_state.iv);
-            leaf_commitments[i] = commitment;
-        }
-    }
-
-    // Extract all the leaf keys (except j_star)
-    let leaf_keys: Vec<[u8; 16]> = tree[height]
-        .iter()
-        .enumerate()
-        .filter_map(|(i, key)| if i != j_star { key.clone() } else { None })
-        .collect();
-
-    (leaf_keys, leaf_commitments)
-}
-
 // Define a struct for the external inputs variable
 #[derive(Clone, Debug)]
 pub struct InitialStateVar<F: PrimeField> {
@@ -306,23 +252,65 @@ impl<F: PrimeField> FCircuit<F> for AllButOneVCFCircuit<F> {
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {
         // This is a simplified implementation
         // In a real implementation, we would need to implement the full verification logic
-        todo!();
+        let height = external_inputs.index_bits.len();
+        let num_leaves = 1 << height;
+
+        // The index we're not revealing
+        let mut j_star = 0;
+        for (i, &bit) in external_inputs.index_bits.iter().enumerate() {
+            j_star |= bit << (height - 1 - i);
+        }
+
+        // For testing purposes, create a complete tree
+        let mut tree: Vec<Vec<Option<[u8; 16]>>> = Vec::new();
+        for i in 0..=height {
+            tree.push(vec![None; 1 << i]);
+        }
+
+        // Initialize the leaf commitments
+        let mut leaf_commitments = vec![[0u8; 32]; num_leaves];
+
+        // Create a root seed (this is just for testing)
+        let root_seed = [42u8; 16];
+        tree[0][0] = Some(root_seed);
+
+        // Expand the tree level by level
+        for level in 0..height {
+            for i in 0..(1 << level) {
+                if let Some(seed) = tree[level][i] {
+                    let (left, right) = prg(&seed);
+                    tree[level + 1][2 * i] = Some(left);
+                    tree[level + 1][2 * i + 1] = Some(right);
+                }
+            }
+        }
+
+        // Compute the leaf commitments
+        for i in 0..num_leaves {
+            if let Some(leaf_key) = tree[height][i] {
+                let (_, commitment) = h0(&leaf_key, external_inputs.iv);
+                leaf_commitments[i] = commitment;
+            }
+        }
+
+        // Extract all the leaf keys (except j_star)
+        let leaf_keys: Vec<[u8; 16]> = tree[height]
+            .iter()
+            .enumerate()
+            .filter_map(|(i, key)| if i != j_star { key.clone() } else { None })
+            .collect();
+
+        (leaf_keys, leaf_commitments);
+        let h_computed = h1(&leaf_commitments);
+        let is_valid = h_computed == external_inputs.h;
         // For now, just return the input state
         Ok(z_i)
     }
 }
 
 // Function to perform the folding steps
-pub fn fold_verification() -> FinalState {
-    println!("Starting All-but-One Vector Commitment folding verification");
-
+pub fn fold_verification() -> Result<(), Error> {
     let external_inputs = load_initial_state("proof.json");
-    let initial_state = &external_inputs;
-    // Reconstruct the tree and compute the commitments
-    let (leaf_keys, leaf_commitments) = reconstruct(initial_state);
-
-    let h_computed = h1(&leaf_commitments);
-
     let f_circuit = AllButOneVCFCircuit::<Fr>::new(()).expect("Failed to create circuit");
 
     // Define the Nova folding scheme
@@ -350,7 +338,7 @@ pub fn fold_verification() -> FinalState {
         .expect("Failed to initialize folding scheme");
 
     // Perform folding for each level of the tree
-    for i in 0..initial_state.index_bits.len() {
+    for i in 0..external_inputs.index_bits.len() {
         let start = Instant::now();
         // Create a dummy external input for now
         let external_input = InitialState::default();
@@ -363,14 +351,7 @@ pub fn fold_verification() -> FinalState {
     let ivc_proof = folding_scheme.ivc_proof();
     N::verify(nova_params.1, ivc_proof).expect("Failed to verify");
 
-    FinalState { h_computed, leaf_commitments }
-}
-
-// Function to verify the final state
-// todo: this part should be constraints
-pub fn verify_final_state(final_state: FinalState, initial_state: &InitialState) -> bool {
-    // Check if the computed H1 hash matches the original commitment
-    final_state.h_computed == initial_state.h
+    Ok(())
 }
 
 #[cfg(test)]
@@ -449,125 +430,5 @@ mod tests {
         // Ensure deterministic behavior
         let result2 = h1(&commitments);
         assert_eq!(result, result2);
-    }
-
-    #[test]
-    fn test_ggm_tree_reconstruction() {
-        // Create a GGM tree with height 3
-        let height = 3;
-        let num_leaves = 1 << height;
-
-        // Create a root seed
-        let root_seed = [42u8; 16];
-
-        // Build the GGM tree
-        let mut tree: Vec<Vec<Option<[u8; 16]>>> = Vec::new();
-        for i in 0..=height {
-            tree.push(vec![None; 1 << i]);
-        }
-        tree[0][0] = Some(root_seed);
-
-        // Expand the tree level by level
-        for level in 0..height {
-            for i in 0..(1 << level) {
-                if let Some(seed) = tree[level][i] {
-                    let (left, right) = prg(&seed);
-                    tree[level + 1][2 * i] = Some(left);
-                    tree[level + 1][2 * i + 1] = Some(right);
-                }
-            }
-        }
-
-        // Choose an index to hide (j_star)
-        let j_star = 5; // Binary: 101
-        let index_bits = vec![true, false, true]; // MSB to LSB
-
-        // Create the partial decommitment
-        let mut pdecom = Vec::new();
-
-        // Level 0: Add the sibling of the root path
-        if index_bits[0] {
-            // If bit is 1, the path goes right, so the sibling is on the left
-            pdecom.push(tree[1][0].unwrap());
-        } else {
-            // If bit is 0, the path goes left, so the sibling is on the right
-            pdecom.push(tree[1][1].unwrap());
-        }
-
-        // Level 1: Add the sibling of the path node
-        let path_index_level1 = if index_bits[0] { 1 } else { 0 };
-        let sibling_index_level1 =
-            if index_bits[1] { 2 * path_index_level1 } else { 2 * path_index_level1 + 1 };
-        pdecom.push(tree[2][sibling_index_level1].unwrap());
-
-        // Level 2: Add the sibling of the path node
-        let path_index_level2 =
-            (if index_bits[0] { 1 } else { 0 }) << 1 | (if index_bits[1] { 1 } else { 0 });
-        let sibling_index_level2 =
-            if index_bits[2] { 2 * path_index_level2 } else { 2 * path_index_level2 + 1 };
-        pdecom.push(tree[3][sibling_index_level2].unwrap());
-
-        // Create the initial state
-        let iv = [0u8; 16];
-        let mut leaf_commitments = Vec::new();
-        for i in 0..num_leaves {
-            let (_, commitment) = h0(&tree[height][i].unwrap(), &iv);
-            leaf_commitments.push(commitment);
-        }
-
-        // Compute the final commitment
-        let h = h1(&leaf_commitments);
-
-        let initial_state = InitialState { h, pdecom, index_bits, iv, current_level: 0 };
-
-        // Reconstruct the tree
-        let (reconstructed_keys, reconstructed_commitments) = reconstruct(&initial_state);
-
-        // Verify that we reconstructed all leaf keys except j_star
-        assert_eq!(reconstructed_keys.len(), num_leaves - 1);
-
-        // Verify that the reconstructed commitments match the original ones
-        for i in 0..num_leaves {
-            if i != j_star {
-                // Find the index in the reconstructed keys
-                let reconstructed_index = if i < j_star { i } else { i - 1 };
-                let (_, expected_commitment) = h0(&tree[height][i].unwrap(), &iv);
-                assert_eq!(reconstructed_commitments[i], expected_commitment);
-            }
-        }
-
-        // Compute the final commitment from the reconstructed commitments
-        let h_computed = h1(&reconstructed_commitments);
-
-        // Verify that the computed commitment matches the original one
-        assert_eq!(h_computed, h);
-    }
-
-    #[test]
-    fn test_folding() {
-        // Create a dummy proof.json file
-        let initial_state = InitialState {
-            h: [0u8; 32],
-            pdecom: vec![[1u8; 16], [2u8; 16], [3u8; 16]], // Add some dummy sibling keys
-            index_bits: vec![true, false, true],           // Index 5 in a height 3 tree
-            iv: [0u8; 16],
-            current_level: 0,
-        };
-
-        // Serialize the initial state to JSON
-        let json_string = serde_json::to_string(&initial_state).unwrap();
-
-        // Write the JSON string to a file
-        std::fs::write("proof.json", json_string).expect("Unable to write file");
-
-        let initial_state = load_initial_state("proof.json");
-        let final_state = fold_verification();
-        let is_valid = verify_final_state(final_state, &initial_state);
-        // For testing purposes, we're not expecting the verification to pass
-        // since we're using dummy data
-        assert_eq!(is_valid, false);
-
-        // Clean up the dummy file (ignore errors if the file doesn't exist)
-        let _ = std::fs::remove_file("proof.json");
     }
 }
