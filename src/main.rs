@@ -1,7 +1,7 @@
 mod all_but_one_vc;
 mod gadget;
+mod merkletree;
 mod prove;
-mod vc;
 mod vc_blake3;
 mod verify; // Add the module declaration for fold
 
@@ -13,7 +13,7 @@ fn main() {
         match args[1].as_str() {
             "prove" => prove::main().expect("Failed to prove"),
             "verify" => verify::main().expect("Failed to verify"),
-            "vc" => vc::main().expect("Failed to run VC with SHA-256"),
+            "vc" => merkletree::main().expect("Failed to run VC with SHA-256"),
             "vc-blake3" => vc_blake3::main().expect("Failed to run VC with Blake3"),
             "fold" => {
                 // Create a dummy proof.json file
