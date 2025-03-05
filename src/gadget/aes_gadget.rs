@@ -3,12 +3,8 @@
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(clippy::upper_case_acronyms)]
-
 use ark_ff::PrimeField;
-use ark_r1cs_std::alloc::AllocVar;
-use ark_r1cs_std::convert::ToBitsGadget;
-use ark_r1cs_std::uint8::UInt8;
-use ark_r1cs_std::{prelude::*, R1CSVar};
+use ark_r1cs_std::{alloc::AllocVar, convert::ToBitsGadget, prelude::*, uint8::UInt8, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 
 // AES S-box lookup table

@@ -6,8 +6,7 @@
 
 use ark_crypto_primitives::crh::{TwoToOneCRHScheme, TwoToOneCRHSchemeGadget};
 use ark_ff::PrimeField;
-use ark_r1cs_std::alloc::AllocVar;
-use ark_r1cs_std::{boolean::Boolean, prelude::*};
+use ark_r1cs_std::{alloc::AllocVar, boolean::Boolean, prelude::*};
 use ark_relations::r1cs::SynthesisError;
 use std::borrow::Borrow;
 

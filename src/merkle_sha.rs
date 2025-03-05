@@ -16,21 +16,19 @@ use ark_crypto_primitives::crh::{
 };
 use ark_ff::PrimeField;
 use ark_grumpkin::Projective as Projective2;
-use ark_r1cs_std::alloc::AllocVar;
 use ark_r1cs_std::{
-    boolean::Boolean, convert::ToConstraintFieldGadget, fields::fp::FpVar, prelude::*,
+    alloc::AllocVar, boolean::Boolean, convert::ToConstraintFieldGadget, fields::fp::FpVar,
+    prelude::*,
 };
-
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 use core::marker::PhantomData;
 use folding_schemes::{
     commitment::{kzg::KZG, pedersen::Pedersen},
-    folding::nova::PreprocessorParam,
+    folding::nova::{Nova, PreprocessorParam},
     frontend::FCircuit,
     transcript::poseidon::poseidon_canonical_config,
-    FoldingScheme,
+    Error, FoldingScheme,
 };
-use folding_schemes::{folding::nova::Nova, Error};
 use std::{borrow::Borrow, time::Instant};
 
 #[derive(Clone, Debug, Default)]

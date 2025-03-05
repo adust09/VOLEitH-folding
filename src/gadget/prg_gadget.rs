@@ -6,9 +6,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use ark_ff::PrimeField;
-use ark_r1cs_std::alloc::AllocVar;
-use ark_r1cs_std::uint8::UInt8;
-use ark_r1cs_std::R1CSVar;
+use ark_r1cs_std::{alloc::AllocVar, uint8::UInt8, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, SynthesisError};
 
 // AES block size in bytes

@@ -12,13 +12,12 @@ use ark_r1cs_std::{
     fields::{fp::FpVar, FieldVar},
 };
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use folding_schemes::FoldingScheme;
 use folding_schemes::{
     commitment::{kzg::KZG, pedersen::Pedersen},
     folding::nova::{Nova, PreprocessorParam},
     frontend::FCircuit,
     transcript::poseidon::poseidon_canonical_config,
-    Error,
+    Error, FoldingScheme,
 };
 use std::{marker::PhantomData, time::Instant};
 
