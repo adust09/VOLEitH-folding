@@ -58,7 +58,7 @@ pub fn native_prg(seed: &[u8; PRG_OUTPUT_SIZE]) -> ([u8; PRG_OUTPUT_SIZE], [u8; 
     let cipher = openssl::symm::Cipher::aes_128_ctr();
 
     // Create the IV (all zeros except for the counter)
-    let mut iv_left = [0u8; AES_BLOCK_SIZE];
+    let iv_left = [0u8; AES_BLOCK_SIZE];
     let mut iv_right = [0u8; AES_BLOCK_SIZE];
     iv_right[AES_BLOCK_SIZE - 1] = 1; // Counter 1 for right child
 

@@ -67,7 +67,7 @@ pub struct AESState<F: PrimeField> {
 
 impl<F: PrimeField> AESState<F> {
     // Create a new AES state from a block of bytes
-    pub fn new(cs: ConstraintSystemRef<F>, block: &[UInt8<F>]) -> Result<Self, SynthesisError> {
+    pub fn new(_cs: ConstraintSystemRef<F>, block: &[UInt8<F>]) -> Result<Self, SynthesisError> {
         assert_eq!(block.len(), AES_BLOCK_SIZE);
 
         let mut state = vec![vec![UInt8::constant(0); 4]; 4];
@@ -252,7 +252,7 @@ fn sbox_lookup<F: PrimeField>(
 
 // GF(2^8) addition (XOR)
 pub fn gf_add<F: PrimeField>(
-    cs: ConstraintSystemRef<F>,
+    _cs: ConstraintSystemRef<F>,
     a: &UInt8<F>,
     b: &UInt8<F>,
 ) -> Result<UInt8<F>, SynthesisError> {

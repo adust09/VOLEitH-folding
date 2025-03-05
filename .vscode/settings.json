@@ -1,6 +1,12 @@
 {
     "cSpell.words": [
         "fcircuit",
-        "kary"
+        "FIPS",
+        "kary",
+        "keystream",
+        "pdecom",
+        "RCON",
+        "SBOX",
+        "symm"
     ]
 }
