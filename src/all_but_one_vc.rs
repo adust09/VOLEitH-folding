@@ -34,13 +34,13 @@ pub struct FinalState {
     pub leaf_commitments: Vec<[u8; 32]>, // The commitments for each leaf
 }
 
-use crate::prg_gadget::PRGGadget;
+use crate::gadget::prg_gadget::PRGGadget;
 
 // PRG (Pseudo-Random Generator) implementation
 // This expands a seed into two child seeds
 fn prg(seed: &[u8; 16]) -> ([u8; 16], [u8; 16]) {
     // Use the PRGGadget's native implementation
-    crate::prg_gadget::PRGGadget::native_expand(seed)
+    crate::gadget::prg_gadget::PRGGadget::native_expand(seed)
 }
 
 // PRG implementation for the constraint system
@@ -74,7 +74,7 @@ fn h0_constraints<F: PrimeField>(
     leaf_key: &[UInt8<F>],
     iv: &[UInt8<F>],
 ) -> Result<(Vec<UInt8<F>>, Vec<UInt8<F>>), SynthesisError> {
-    use crate::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
+    use crate::gadget::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
 
     // Concatenate the leaf key and IV
     let mut input = Vec::with_capacity(leaf_key.len() + iv.len());
@@ -121,7 +121,7 @@ fn h1_constraints<F: PrimeField>(
     cs: ConstraintSystemRef<F>,
     commitments: &[Vec<UInt8<F>>],
 ) -> Result<Vec<UInt8<F>>, SynthesisError> {
-    use crate::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
+    use crate::gadget::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
 
     // Start with a zero digest
     let mut result = DigestVar(vec![UInt8::constant(0); 32]);

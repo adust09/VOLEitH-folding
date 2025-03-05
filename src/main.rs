@@ -1,7 +1,5 @@
-mod aes_gadget;
 mod all_but_one_vc;
-mod blake3_gadget;
-mod prg_gadget;
+mod gadget;
 mod prove;
 mod vc;
 mod vc_blake3;

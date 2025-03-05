@@ -27,7 +27,7 @@ use folding_schemes::{folding::nova::Nova, Error};
 use std::{borrow::Borrow, time::Instant};
 
 // Import the Blake3 gadget implementation
-use crate::blake3_gadget::{Blake3CRHGadget, DigestVar};
+use crate::gadget::blake3_gadget::{Blake3CRHGadget, DigestVar};
 
 // Define the MerkleProofStep struct and its variable representation
 #[derive(Clone, Debug, Default)]
