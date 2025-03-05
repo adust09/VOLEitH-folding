@@ -147,6 +147,7 @@ pub fn load_initial_state(proof_path: &str) -> InitialState {
 }
 
 // Reconstruct the GGM tree and compute the commitments
+// todo: this part should be in the step_constraints
 fn reconstruct(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32]>) {
     let height = initial_state.index_bits.len();
     let num_leaves = 1 << height;
@@ -197,100 +198,6 @@ fn reconstruct(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32]>) {
         .collect();
 
     (leaf_keys, leaf_commitments)
-}
-
-// Define the circuit for folding the verification
-#[derive(Clone, Debug)]
-pub struct AllButOneVCCircuit<F: PrimeField> {
-    pub initial_state: InitialState,
-    pub current_level: usize,
-    pub reconstructed_keys: Vec<[u8; 16]>,
-    pub leaf_commitments: Vec<[u8; 32]>,
-    pub _phantom: PhantomData<F>,
-}
-
-impl<F: PrimeField> ConstraintSynthesizer<F> for AllButOneVCCircuit<F> {
-    fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
-        // Get the current level
-        let level = self.current_level;
-
-        // If we're at the first level, we need to initialize the state
-        if level == 0 {
-            // Initialize the state with the initial commitment
-            // Convert the initial commitment to UInt8 variables
-            let mut h_vars = Vec::with_capacity(32);
-            for i in 0..32 {
-                h_vars.push(UInt8::new_witness(cs.clone(), || Ok(self.initial_state.h[i]))?);
-            }
-
-            // TODO: Add constraints to verify the initial commitment
-            todo!();
-
-            return Ok(());
-        }
-
-        // Get the bit for the current level
-        let bit = self.initial_state.index_bits[level - 1];
-
-        // Convert the bit to a Boolean variable
-        let bit_var = Boolean::new_witness(cs.clone(), || Ok(bit))?;
-
-        // Get the path index for this level
-        let height = self.initial_state.index_bits.len();
-        let mut j_star = 0;
-        for (i, &bit) in self.initial_state.index_bits.iter().enumerate() {
-            j_star |= (bit as usize) << (height - 1 - i);
-        }
-        let path_index = j_star >> (height - 1 - level) & ((1 << level) - 1);
-
-        // Convert the path index to a field variable
-        let path_index_var = FpVar::new_witness(cs.clone(), || Ok(F::from(path_index as u64)))?;
-
-        // Get the parent node index
-        let parent_index = path_index >> 1;
-        let is_right_child = path_index & 1 == 1;
-
-        // Convert the parent index to a field variable
-        let parent_index_var = FpVar::new_witness(cs.clone(), || Ok(F::from(parent_index as u64)))?;
-
-        // Convert the is_right_child flag to a Boolean variable
-        let is_right_child_var = Boolean::new_witness(cs.clone(), || Ok(is_right_child))?;
-
-        // Get the parent key
-        // In a real implementation, we would need to look up the parent key from the previous level
-        // For now, we'll just use a dummy key
-        let mut parent_key_vars = Vec::with_capacity(16);
-        for i in 0..16 {
-            parent_key_vars.push(UInt8::new_witness(cs.clone(), || Ok(0u8))?);
-        }
-
-        // Compute the PRG for the current level
-        let (left_child_vars, right_child_vars) = prg_constraints(cs.clone(), &parent_key_vars)?;
-
-        // Select the appropriate child based on is_right_child
-        let mut child_key_vars = Vec::with_capacity(16);
-        for i in 0..16 {
-            let left_byte = left_child_vars[i].clone();
-            let right_byte = right_child_vars[i].clone();
-            let selected_byte =
-                UInt8::conditionally_select(&is_right_child_var, &right_byte, &left_byte)?;
-            child_key_vars.push(selected_byte);
-        }
-
-        // Convert the IV to UInt8 variables
-        let mut iv_vars = Vec::with_capacity(16);
-        for i in 0..16 {
-            iv_vars.push(UInt8::new_witness(cs.clone(), || Ok(self.initial_state.iv[i]))?);
-        }
-
-        // Compute the H0 hash for the leaf node
-        let (_, commitment_vars) = h0_constraints(cs.clone(), &child_key_vars, &iv_vars)?;
-
-        // TODO: Add constraints to verify the commitment
-        todo!();
-
-        Ok(())
-    }
 }
 
 // Define a struct for the external inputs variable
@@ -460,7 +367,7 @@ pub fn fold_verification() -> FinalState {
 }
 
 // Function to verify the final state
-// todo: should include in fold_verification?
+// todo: this part should be constraints
 pub fn verify_final_state(final_state: FinalState, initial_state: &InitialState) -> bool {
     // Check if the computed H1 hash matches the original commitment
     final_state.h_computed == initial_state.h
@@ -568,41 +475,6 @@ mod tests {
                     tree[level + 1][2 * i] = Some(left);
                     tree[level + 1][2 * i + 1] = Some(right);
                 }
-            }
-
-            #[test]
-            fn test_circuit_constraints() {
-                let cs = ConstraintSystem::<Fr>::new_ref();
-
-                // Create a simple test case
-                let height = 2;
-                let j_star = 2; // Binary: 10
-                let index_bits = vec![true, false]; // MSB to LSB
-                let iv = [0u8; 16];
-
-                // Create a dummy initial state
-                let initial_state = InitialState {
-                    h: [0u8; 32],
-                    pdecom: vec![[1u8; 16], [2u8; 16]],
-                    index_bits: index_bits.clone(),
-                    iv,
-                    current_level: 1, // Testing level 1
-                };
-
-                // Create the circuit
-                let circuit = AllButOneVCCircuit::<Fr> {
-                    initial_state,
-                    current_level: 1,
-                    reconstructed_keys: vec![[3u8; 16], [4u8; 16], [5u8; 16]],
-                    leaf_commitments: vec![[0u8; 32], [0u8; 32], [0u8; 32], [0u8; 32]],
-                    _phantom: PhantomData,
-                };
-
-                // Generate constraints
-                circuit.generate_constraints(cs.clone()).unwrap();
-
-                // Check that the constraints are satisfiable
-                assert!(cs.is_satisfied().unwrap());
             }
         }
 
