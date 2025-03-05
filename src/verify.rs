@@ -211,13 +211,5 @@ pub fn main() -> Result<(), Error> {
     // Load the initial state from proof.json
     let initial_state = load_initial_state("proof.json");
 
-    // Perform the folding steps
-    let final_state = fold_verification(&initial_state);
-
-    // Verify the final state
-    let is_valid = verify_final_state(final_state, &initial_state);
-
-    println!("Verification result: {}", is_valid);
-
     Ok(())
 }

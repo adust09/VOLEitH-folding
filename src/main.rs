@@ -32,17 +32,6 @@ fn main() {
 
                 // Write the JSON string to a file
                 std::fs::write("proof.json", json_string).expect("Unable to write file");
-
-                // Load the initial state from proof.json
-                let initial_state = all_but_one_vc::load_initial_state("proof.json");
-
-                // Perform the folding steps
-                let final_state = all_but_one_vc::fold_verification(&initial_state);
-
-                // Verify the final state
-                let is_valid = all_but_one_vc::verify_final_state(final_state, &initial_state);
-
-                println!("Verification result: {}", is_valid);
             }
             _ => {
                 println!("Unknown command: {}", args[1]);

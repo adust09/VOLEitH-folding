@@ -1,5 +1,4 @@
-// src/all_but_one_vc.rs
-
+use crate::gadget::prg_gadget::PRGGadget;
 use ark_bn254::{Bn254, Fr, G1Projective as Projective};
 use ark_crypto_primitives::crh::TwoToOneCRHSchemeGadget;
 use ark_ff::PrimeField;
@@ -16,9 +15,8 @@ use folding_schemes::{
     Error, FoldingScheme,
 };
 use serde::{Deserialize, Serialize};
-use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
+use std::{fs::File, io::Read, marker::PhantomData, path::Path, time::Instant};
 
-// Define the state variables
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct InitialState {
     pub h: [u8; 32],           // The original commitment (H1 hash)
@@ -34,16 +32,11 @@ pub struct FinalState {
     pub leaf_commitments: Vec<[u8; 32]>, // The commitments for each leaf
 }
 
-use crate::gadget::prg_gadget::PRGGadget;
-
-// PRG (Pseudo-Random Generator) implementation
-// This expands a seed into two child seeds
 fn prg(seed: &[u8; 16]) -> ([u8; 16], [u8; 16]) {
     // Use the PRGGadget's native implementation
-    crate::gadget::prg_gadget::PRGGadget::native_expand(seed)
+    PRGGadget::native_expand(seed)
 }
 
-// PRG implementation for the constraint system
 fn prg_constraints<F: PrimeField>(
     cs: ConstraintSystemRef<F>,
     seed: &[UInt8<F>],
@@ -74,7 +67,7 @@ fn h0_constraints<F: PrimeField>(
     leaf_key: &[UInt8<F>],
     iv: &[UInt8<F>],
 ) -> Result<(Vec<UInt8<F>>, Vec<UInt8<F>>), SynthesisError> {
-    use crate::gadget::blake3_gadget::{Blake3CRH, Blake3CRHGadget, DigestVar};
+    use crate::gadget::blake3_gadget::{Blake3CRHGadget, DigestVar};
 
     // Concatenate the leaf key and IV
     let mut input = Vec::with_capacity(leaf_key.len() + iv.len());
@@ -154,7 +147,7 @@ pub fn load_initial_state(proof_path: &str) -> InitialState {
 }
 
 // Reconstruct the GGM tree and compute the commitments
-fn reconstruct_tree(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32]>) {
+fn reconstruct(initial_state: &InitialState) -> (Vec<[u8; 16]>, Vec<[u8; 32]>) {
     let height = initial_state.index_bits.len();
     let num_leaves = 1 << height;
 
@@ -231,6 +224,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for AllButOneVCCircuit<F> {
             }
 
             // TODO: Add constraints to verify the initial commitment
+            todo!();
 
             return Ok(());
         }
@@ -293,6 +287,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for AllButOneVCCircuit<F> {
         let (_, commitment_vars) = h0_constraints(cs.clone(), &child_key_vars, &iv_vars)?;
 
         // TODO: Add constraints to verify the commitment
+        todo!();
 
         Ok(())
     }
@@ -384,7 +379,7 @@ pub struct AllButOneVCFCircuit<F: PrimeField> {
 
 impl<F: PrimeField> FCircuit<F> for AllButOneVCFCircuit<F> {
     type Params = ();
-    type ExternalInputs = InitialState;
+    type ExternalInputs = InitialState; // this might be proof.json
     type ExternalInputsVar = InitialStateVar<F>;
 
     fn new(_params: Self::Params) -> Result<Self, Error> {
@@ -400,31 +395,27 @@ impl<F: PrimeField> FCircuit<F> for AllButOneVCFCircuit<F> {
         _cs: ConstraintSystemRef<F>,
         _i: usize,
         z_i: Vec<FpVar<F>>,
-        _external_inputs: Self::ExternalInputsVar,
+        external_inputs: Self::ExternalInputsVar,
     ) -> Result<Vec<FpVar<F>>, SynthesisError> {
         // This is a simplified implementation
         // In a real implementation, we would need to implement the full verification logic
-
+        todo!();
         // For now, just return the input state
         Ok(z_i)
     }
 }
 
 // Function to perform the folding steps
-pub fn fold_verification(initial_state: &InitialState) -> FinalState {
+pub fn fold_verification() -> FinalState {
     println!("Starting All-but-One Vector Commitment folding verification");
 
+    let external_inputs = load_initial_state("proof.json");
+    let initial_state = &external_inputs;
     // Reconstruct the tree and compute the commitments
-    let (leaf_keys, leaf_commitments) = reconstruct_tree(initial_state);
+    let (leaf_keys, leaf_commitments) = reconstruct(initial_state);
 
-    println!("Reconstructed {} leaf keys", leaf_keys.len());
-
-    // Compute the final commitment
     let h_computed = h1(&leaf_commitments);
 
-    println!("Computed final commitment");
-
-    // Set up the Nova folding scheme
     let f_circuit = AllButOneVCFCircuit::<Fr>::new(()).expect("Failed to create circuit");
 
     // Define the Nova folding scheme
@@ -441,7 +432,6 @@ pub fn fold_verification(initial_state: &InitialState) -> FinalState {
     let poseidon_config = poseidon_canonical_config::<Fr>();
     let mut rng = rand::rngs::OsRng;
 
-    println!("Preparing Nova parameters");
     let nova_preprocess_params = PreprocessorParam::new(poseidon_config, f_circuit);
     let nova_params =
         N::preprocess(&mut rng, &nova_preprocess_params).expect("Failed to preprocess");
@@ -449,7 +439,6 @@ pub fn fold_verification(initial_state: &InitialState) -> FinalState {
     // Initial state for folding
     let initial_folding_state = vec![Fr::from(1_u32)];
 
-    println!("Initializing folding scheme");
     let mut folding_scheme = N::init(&nova_params, f_circuit, initial_folding_state.clone())
         .expect("Failed to initialize folding scheme");
 
@@ -471,6 +460,7 @@ pub fn fold_verification(initial_state: &InitialState) -> FinalState {
 }
 
 // Function to verify the final state
+// todo: should include in fold_verification?
 pub fn verify_final_state(final_state: FinalState, initial_state: &InitialState) -> bool {
     // Check if the computed H1 hash matches the original commitment
     final_state.h_computed == initial_state.h
@@ -659,7 +649,7 @@ mod tests {
         let initial_state = InitialState { h, pdecom, index_bits, iv, current_level: 0 };
 
         // Reconstruct the tree
-        let (reconstructed_keys, reconstructed_commitments) = reconstruct_tree(&initial_state);
+        let (reconstructed_keys, reconstructed_commitments) = reconstruct(&initial_state);
 
         // Verify that we reconstructed all leaf keys except j_star
         assert_eq!(reconstructed_keys.len(), num_leaves - 1);
@@ -699,7 +689,7 @@ mod tests {
         std::fs::write("proof.json", json_string).expect("Unable to write file");
 
         let initial_state = load_initial_state("proof.json");
-        let final_state = fold_verification(&initial_state);
+        let final_state = fold_verification();
         let is_valid = verify_final_state(final_state, &initial_state);
         // For testing purposes, we're not expecting the verification to pass
         // since we're using dummy data
