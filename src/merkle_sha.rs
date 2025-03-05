@@ -329,3 +329,35 @@ pub fn main() -> Result<(), Error> {
     N::verify(nova_params.1, ivc_proof)?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::Rng;
+
+    #[test]
+    fn test_merkle_proof_fcircuit() {
+        use ark_bn254::Fr;
+        use ark_r1cs_std::{alloc::AllocVar, fields::fp::FpVar};
+        use ark_relations::r1cs::ConstraintSystem;
+
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        let initial_state_value = Fr::from(1_u32);
+        let initial_state = FpVar::new_witness(cs.clone(), || Ok(initial_state_value)).unwrap();
+
+        let mut proof_step_value = MerkleProofStep { sibling: [0u8; 32], is_left: true };
+        rand::thread_rng().fill(&mut proof_step_value.sibling);
+        let proof_step =
+            MerkleProofStepVar::new_witness(cs.clone(), || Ok(proof_step_value)).unwrap();
+
+        let circuit = MerkleProofFCircuit::<Fr>::new(()).unwrap();
+
+        let next_state = circuit
+            .generate_step_constraints(cs.clone(), 0, vec![initial_state], proof_step)
+            .unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(next_state.len(), 1);
+    }
+}
