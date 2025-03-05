@@ -28,7 +28,6 @@ use std::{borrow::Borrow, time::Instant};
 
 // Import the Blake3 gadget implementation
 use crate::gadget::blake3_gadget::{Blake3CRHGadget, DigestVar};
-use ark_crypto_primitives::crh::{CRHScheme, TwoToOneCRHScheme};
 
 // Define the MerkleProofStep struct and its variable representation
 #[derive(Clone, Debug, Default)]
