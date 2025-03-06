@@ -14,9 +14,10 @@ use folding_schemes::{
     transcript::poseidon::poseidon_canonical_config,
     Error, FoldingScheme,
 };
+use schmivitz::Proof;
+use schmivitz::
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
-
 fn prg_constraints<F: PrimeField>(
     cs: ConstraintSystemRef<F>,
     seed: &[UInt8<F>],
@@ -167,7 +168,6 @@ impl<F: PrimeField> AllocVar<InitialState, F> for InitialStateVar<F> {
         })
     }
 }
-
 // Define the FCircuit for Nova folding
 #[derive(Clone, Copy, Debug)]
 pub struct AllButOneVCFCircuit<F: PrimeField> {

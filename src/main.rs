@@ -1,7 +1,5 @@
 mod all_but_one_vc;
 mod gadget;
-mod merkle_blake3;
-mod merkle_sha;
 mod prove;
 mod verify; // Add the module declaration for fold
 
@@ -13,10 +11,6 @@ fn main() {
         match args[1].as_str() {
             "prove" => prove::main().expect("Failed to prove"),
             "verify" => verify::main().expect("Failed to verify"),
-            "merkle_sha" => merkle_sha::main().expect("Failed to run Merkle proof with SHA-256"),
-            "merkle-blake3" => {
-                merkle_blake3::main().expect("Failed to run Merkle proof with Blake3")
-            }
             "fold" => {
                 // Create a dummy proof.json file
                 let initial_state = all_but_one_vc::InitialState {
