@@ -22,3 +22,11 @@ Cargo.lock
 
 .DS_Store
 .cline/
+.roo/
+.roomodes
+.clinerules-ask
+.clinerules-code
+.clinerules-debug
+.clinerules-test
+.clinerules-architect
+memory-bank/
