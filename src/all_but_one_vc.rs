@@ -14,8 +14,6 @@ use folding_schemes::{
     transcript::poseidon::poseidon_canonical_config,
     Error, FoldingScheme,
 };
-use schmivitz::Proof;
-use schmivitz::
 use serde::{Deserialize, Serialize};
 use std::{fs::File, io::Read, marker::PhantomData, time::Instant};
 fn prg_constraints<F: PrimeField>(
