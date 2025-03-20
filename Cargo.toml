@@ -47,6 +47,7 @@ chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 clap = { version = "4.4", features = ["derive"] }
 hex = "0.4.3"
+sysinfo = "0.29.10"
 
 # This allows the crate to be built when targeting WASM.
 # See more at: https://docs.rs/getrandom/#webassembly-support 
