@@ -1,0 +1,10 @@
+{
+  "proof_generation_time_ms": 114,
+  "proof_verification_time_ms": 69,
+  "proof_size_bytes": 58569,
+  "prover_cpu_usage_percent": 0.2996645,
+  "prover_memory_usage_mb": 12,
+  "verifier_cpu_usage_percent": 0.2675565,
+  "verifier_memory_usage_mb": 12,
+  "communication_overhead_bytes": 78712
+}

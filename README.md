@@ -54,12 +54,12 @@ You can run the benchmarks yourself using the following commands:
 
 For F_2 field:
 ```bash
-cargo run --bin vole-itH-folding -- prove --field f2
+cargo run --bin voleitH-bench -- prove --field f2
 ```
 
 For F_64 field:
 ```bash
-cargo run --bin vole-itH-folding -- prove --field f64
+cargo run --bin voleitH-bench -- prove --field f64
 ```
 
 These commands will:
@@ -76,3 +76,23 @@ Observations:
 - CPU and memory usage remain minimal in both implementations
 
 Note: Setup Time and On-Chain Verification Gas Cost are not included in this benchmark as they were not part of the measurement requirements.
+
+## F_2 Hash Chain Benchmark (10 iterations)
+
+| Metric                   | Result        | Notes                                                 |
+|--------------------------|---------------|-------------------------------------------------------|
+| Proof Generation Time    | 114 ms        | Time to generate proof for 10-iteration hash chain    |
+| Proof Verification Time  | 69 ms         | Time to verify the generated proof                    |
+| Proof Size               | 58,569 bytes  | Size of the serialized proof                          |
+| Prover Computation Load  | 0.30% CPU, 0.01 MB | System resources used during proof generation    |
+| Verifier Computation Load| 0.27% CPU, 0.01 MB | System resources used during proof verification  |
+| Communication Overhead   | 78,712 bytes  | Total data exchanged (inputs + proof)                 |
+
+This benchmark demonstrates the performance of a 10-iteration hash chain where the output of each hash operation is used as input to the next hash. Compared to the single hash operation, the hash chain has:
+- ~2.4x larger proof size (58,569 vs 24,324 bytes)
+- ~3x larger communication overhead (78,712 vs 26,054 bytes)
+- Only slightly increased computation time
+
+For running the hash chain benchmark:
+```bash
+cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain

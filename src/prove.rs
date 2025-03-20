@@ -104,6 +104,26 @@ pub fn main() -> Result<()> {
 }
 
 pub fn prove(field: &str, proof_output_path: &str) -> Result<MeasurementMetrics> {
+    // Build paths for standard circuit
+    let circuit_path_str = format!("src/circuits/poseidon/{}/poseidon.txt", field);
+    let private_input_path_str = format!("src/circuits/poseidon/{}/poseidon_private.txt", field);
+    let public_input_path_str = format!("src/circuits/poseidon/{}/poseidon_public.txt", field);
+
+    // Call the more general function with the specific paths
+    prove_with_paths(
+        &circuit_path_str,
+        &private_input_path_str,
+        &public_input_path_str,
+        proof_output_path,
+    )
+}
+
+pub fn prove_with_paths(
+    circuit_path_str: &str,
+    private_input_path_str: &str,
+    public_input_path_str: &str,
+    proof_output_path: &str,
+) -> Result<MeasurementMetrics> {
     // Create a measurement metrics struct to store results
     let mut metrics = MeasurementMetrics::new();
 
@@ -112,8 +132,7 @@ pub fn prove(field: &str, proof_output_path: &str) -> Result<MeasurementMetrics>
     let pid = std::process::id() as i32;
 
     // Read circuit and input files
-    let circuit_path_str = format!("src/circuits/poseidon/{}/poseidon.txt", field);
-    let circuit_path = Path::new(&circuit_path_str);
+    let circuit_path = Path::new(circuit_path_str);
     let circuit_bytes = fs::read_to_string(circuit_path)
         .wrap_err_with(|| format!("Failed to read circuit file at {:?}", circuit_path))?;
     let circuit_bytes_slice = circuit_bytes.as_bytes();
@@ -121,8 +140,7 @@ pub fn prove(field: &str, proof_output_path: &str) -> Result<MeasurementMetrics>
     // Count input size for communication overhead
     let mut total_input_size = circuit_bytes_slice.len();
 
-    let private_input_path_str = format!("src/circuits/poseidon/{}/poseidon_private.txt", field);
-    let private_input_path = Path::new(&private_input_path_str);
+    let private_input_path = Path::new(private_input_path_str);
     if !private_input_path.exists() {
         return Err(eyre::eyre!("Private input file does not exist at {:?}", private_input_path));
     }
@@ -131,8 +149,7 @@ pub fn prove(field: &str, proof_output_path: &str) -> Result<MeasurementMetrics>
     let private_input_size = fs::metadata(&private_input_path)?.len() as usize;
     total_input_size += private_input_size;
 
-    let public_input_path_str = format!("src/circuits/poseidon/{}/poseidon_public.txt", field);
-    let public_input_path = Path::new(&public_input_path_str);
+    let public_input_path = Path::new(public_input_path_str);
     if !public_input_path.exists() {
         return Err(eyre::eyre!("Public input file does not exist at {:?}", public_input_path));
     }
