@@ -45,11 +45,11 @@ fn main() -> eyre::Result<()> {
                     format!("hash_chain_{}", field_type),
                 )
             } else {
-                // Standard Poseidon circuit
+                // Single Poseidon circuit
                 (
-                    format!("src/circuits/poseidon/{}/poseidon.txt", field_type),
-                    format!("src/circuits/poseidon/{}/poseidon_private.txt", field_type),
-                    format!("src/circuits/poseidon/{}/poseidon_public.txt", field_type),
+                    format!("src/circuits/poseidon/{}/single/poseidon.txt", field_type),
+                    format!("src/circuits/poseidon/{}/single/poseidon_private.txt", field_type),
+                    format!("src/circuits/poseidon/{}/single/poseidon_public.txt", field_type),
                     format!("standard_{}", field_type),
                 )
             };
