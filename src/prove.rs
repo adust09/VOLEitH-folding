@@ -61,6 +61,10 @@ fn prove(field: &str) -> Result<()> {
         .wrap_err_with(|| format!("Failed to write proof to file at {}", proof_path))?;
 
     println!("Proof written to {}", proof_path);
+
+    let verification_result = proof.verify(circuit, &mut transcript_instance);
+    assert!(verification_result.is_ok(), "Proof verification failed");
+
     Ok(())
 }
 
