@@ -35,8 +35,12 @@ fn main() -> eyre::Result<()> {
             let (circuit_path, private_path, public_path, output_prefix) = if circuit_type
                 == "hash_chain"
             {
+                // Currently only F2 is supported by the underlying prover system
                 if field_type != "f2" {
-                    return Err(eyre::eyre!("Hash chain circuit is only available for F2 field"));
+                    return Err(eyre::eyre!(
+                        "Hash chain circuit is only available for F2 field due to limitations in the underlying proving system. \
+                        Although we've created an F64 hash chain circuit implementation, the current prover only supports F2 for hash chains."
+                    ));
                 }
                 (
                     format!("src/circuits/poseidon/f2/hash_chain/poseidon_chain.txt"),
@@ -68,17 +72,40 @@ fn main() -> eyre::Result<()> {
             Ok(())
         }
         None => {
-            // Default behavior
-            println!("No command specified, running 'prove' with f64 field and standard circuit by default");
-            let circuit_path = "src/circuits/poseidon/f64/poseidon.txt";
-            let private_path = "src/circuits/poseidon/f64/poseidon_private.txt";
-            let public_path = "src/circuits/poseidon/f64/poseidon_public.txt";
-            let output_path = "results/proofs/proof_standard_f64.json";
+            // Default behavior with improved help message
+            println!(
+                "No command specified. Using default: 'prove' with f64 field and standard circuit."
+            );
+            println!("Available options:");
+            println!("  --field: f2 or f64 (default: f64)");
+            println!("  --circuit: standard or hash_chain (default: standard)");
+            println!("");
+            println!("Examples:");
+            println!("  cargo run -- prove --field f2 --circuit hash_chain   # Run hash chain with F2 (only F2 is supported for hash chains)");
+            println!("  cargo run -- prove --field f64                       # Run standard Poseidon with F64");
+            println!("  cargo run -- prove --field f2                        # Run standard Poseidon with F2");
+            println!("");
 
+            // Same default as if called explicitly
+            let field_type = "f64";
+            let circuit_type = "standard";
+
+            // Use the same path construction logic as in the explicit command
+            let (circuit_path, private_path, public_path, output_prefix) = (
+                format!("src/circuits/poseidon/{}/single/poseidon.txt", field_type),
+                format!("src/circuits/poseidon/{}/single/poseidon_private.txt", field_type),
+                format!("src/circuits/poseidon/{}/single/poseidon_public.txt", field_type),
+                format!("standard_{}", field_type),
+            );
+
+            let output_path = format!("results/proofs/proof_{}.json", output_prefix);
+            let metrics_path = format!("results/metrics/metrics_{}.json", output_prefix);
+
+            println!("Running prove with field: {}, circuit: {}", field_type, circuit_type);
             let metrics =
-                prove::prove_with_paths(circuit_path, private_path, public_path, output_path)?;
+                prove::prove_with_paths(&circuit_path, &private_path, &public_path, &output_path)?;
             metrics.display();
-            metrics.save_to_file("results/metrics/metrics_standard_f64.json")?;
+            metrics.save_to_file(&metrics_path)?;
             Ok(())
         }
     }

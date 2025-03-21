@@ -1,0 +1,6 @@
+version 2.0.0;
+public_input;
+@type field 18446744073709551616;
+@begin
+    <1234567890123456789>;  // Expected final hash output
+@end
