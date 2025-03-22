@@ -26,27 +26,17 @@ The following two methods are used for onchain-verification.
 
 The following benchmark results were obtained on a test machine using the VOLEitH implementation with Poseidon hash in different field sizes:
 
-## F_2 Field Benchmark
+## Consolidated Benchmark Results
 
-| Metric                   | Result        | Notes                                                 |
-|--------------------------|---------------|-------------------------------------------------------|
-| Proof Generation Time    | 103 ms        | Time to generate proof for Poseidon hash circuit      |
-| Proof Verification Time  | 49 ms         | Time to verify the generated proof                    |
-| Proof Size               | 24,324 bytes  | Size of the serialized proof                          |
-| Prover Computation Load  | 0.18% CPU, 0.01 MB | System resources used during proof generation    |
-| Verifier Computation Load| 0.14% CPU, 0.01 MB | System resources used during proof verification  |
-| Communication Overhead   | 26,054 bytes  | Total data exchanged (inputs + proof)                 |
-
-## F_64 Field Benchmark
-
-| Metric                   | Result        | Notes                                                 |
-|--------------------------|---------------|-------------------------------------------------------|
-| Proof Generation Time    | 110 ms        | Time to generate proof for Poseidon hash circuit      |
-| Proof Verification Time  | 64 ms         | Time to verify the generated proof                    |
-| Proof Size               | 48,269 bytes  | Size of the serialized proof                          |
-| Prover Computation Load  | 0.29% CPU, 0.01 MB | System resources used during proof generation    |
-| Verifier Computation Load| 0.24% CPU, 0.01 MB | System resources used during proof verification  |
-| Communication Overhead   | 66,245 bytes  | Total data exchanged (inputs + proof)                 |
+| Metric                   | F_2 Field     | F_64 Field    | F_2 Hash Chain (10 iterations) | F_64 Hash Chain (10 iterations) |
+|--------------------------|---------------|---------------|--------------------------------|--------------------------------|
+| Proof Generation Time    | 103 ms        | 110 ms        | 114 ms                         | N/A (Not runnable)             |
+| Proof Verification Time  | 49 ms         | 64 ms         | 69 ms                          | N/A (Not runnable)             |
+| Proof Size               | 24,324 bytes  | 48,269 bytes  | 58,569 bytes                   | N/A (Not runnable)             |
+| Prover Computation Load  | 0.18% CPU, 0.01 MB | 0.29% CPU, 0.01 MB | 0.30% CPU, 0.01 MB          | N/A (Not runnable)             |
+| Verifier Computation Load| 0.14% CPU, 0.01 MB | 0.24% CPU, 0.01 MB | 0.27% CPU, 0.01 MB          | N/A (Not runnable)             |
+| Communication Overhead   | 26,054 bytes  | 66,245 bytes  | 78,712 bytes                   | N/A (Not runnable)             |
+| Implementation Status    | Complete      | Complete      | Complete                       | Complete but not runnable      |
 
 ## Running the Benchmarks
 
@@ -62,6 +52,11 @@ For F_64 field:
 cargo run --bin voleitH-bench -- prove --field f64
 ```
 
+For F_2 Hash Chain (10 iterations):
+```bash
+cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain
+```
+
 These commands will:
 1. Generate proof using the specified field
 2. Measure all metrics during proof generation and verification
@@ -74,57 +69,24 @@ Observations:
 - Computation time is slightly higher for F_64 compared to F_2
 - Communication overhead scales proportionally with the proof size
 - CPU and memory usage remain minimal in both implementations
-
-Note: Setup Time and On-Chain Verification Gas Cost are not included in this benchmark as they were not part of the measurement requirements.
-
-## F_2 Hash Chain Benchmark (10 iterations)
-
-| Metric                   | Result        | Notes                                                 |
-|--------------------------|---------------|-------------------------------------------------------|
-| Proof Generation Time    | 114 ms        | Time to generate proof for 10-iteration hash chain    |
-| Proof Verification Time  | 69 ms         | Time to verify the generated proof                    |
-| Proof Size               | 58,569 bytes  | Size of the serialized proof                          |
-| Prover Computation Load  | 0.30% CPU, 0.01 MB | System resources used during proof generation    |
-| Verifier Computation Load| 0.27% CPU, 0.01 MB | System resources used during proof verification  |
-| Communication Overhead   | 78,712 bytes  | Total data exchanged (inputs + proof)                 |
-
-This benchmark demonstrates the performance of a 10-iteration hash chain where the output of each hash operation is used as input to the next hash. Compared to the single hash operation, the hash chain has:
-- ~2.4x larger proof size (58,569 vs 24,324 bytes)
-- ~3x larger communication overhead (78,712 vs 26,054 bytes)
-- Only slightly increased computation time
-
-For running the hash chain benchmark:
-```bash
-cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain
-```
-
-## F_64 Hash Chain Benchmark (10 iterations)
-
-| Metric                   | Status        | Notes                                                 |
-|--------------------------|---------------|-------------------------------------------------------|
-| Implementation Status    | Completed     | Full circuit implementation with 10 iterations        |
-| Executability            | Not runnable  | Current prover system limited to F2 for hash chains   |
+- For hash chains, the F_2 implementation shows ~2.4x larger proof size compared to single hash operation
+- Hash chain operations have approximately 3x larger communication overhead compared to single hash operations
 
 The F64 Hash Chain (10 iterations) has been fully implemented in this project with the circuit available at `src/circuits/poseidon/f64/hash_chain/poseidon_chain.txt`. However, there is a limitation in the underlying proving system (Schmivitz library) that currently only supports F2 field for hash chain operations.
 
-When attempting to run:
+When attempting to run F_64 Hash Chain benchmark:
 ```bash
 cargo run -- prove --field f64 --circuit hash_chain
 ```
 
 The system produces the following error:
 ```
-Error: Hash chain circuit is only available for F2 field due to limitations in the underlying proving system. 
+Error: Hash chain circuit is only available for F2 field due to limitations in the underlying proving system.
 Although we've created an F64 hash chain circuit implementation, the current prover only supports F2 for hash chains.
 ```
 
-### Expected Performance Characteristics
-
-Based on the relative performance of F64 vs F2 in single hash operations, and the performance of F2 Hash Chain, we can extrapolate the expected performance for F64 Hash Chain when support is added to the underlying prover:
-
-- **Proof Size**: Likely ~2-2.5x larger than F2 Hash Chain (~120-150KB)
-- **Proof Generation Time**: ~20-30% higher than F2 Hash Chain
-- **Verification Time**: ~20-30% higher than F2 Hash Chain
-- **Communication Overhead**: Proportional to the proof size increase (~160-190KB)
-
-The F64 Hash Chain implementation is ready for use once the underlying proving system adds support for F64 fields in hash chain operations.
+Based on the relative performance of F64 vs F2 in single hash operations, when support is added to the underlying prover, we can expect the F_64 Hash Chain to have:
+- Proof Size: Likely ~2-2.5x larger than F2 Hash Chain (~120-150KB)
+- Proof Generation Time: ~20-30% higher than F2 Hash Chain
+- Verification Time: ~20-30% higher than F2 Hash Chain
+- Communication Overhead: Proportional to the proof size increase (~160-190KB)
