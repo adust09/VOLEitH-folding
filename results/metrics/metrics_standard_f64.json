@@ -1,10 +1,10 @@
 {
-  "proof_generation_time_ms": 135,
-  "proof_verification_time_ms": 78,
-  "proof_size_bytes": 48364,
-  "prover_cpu_usage_percent": 0.2856145,
-  "prover_memory_usage_mb": 12,
-  "verifier_cpu_usage_percent": 0.293229,
-  "verifier_memory_usage_mb": 12,
-  "communication_overhead_bytes": 66340
+  "proof_generation_time_ms": 113,
+  "proof_verification_time_ms": 62,
+  "proof_size_bytes": 48248,
+  "prover_cpu_usage_percent": 0.2664025,
+  "prover_memory_usage_mb": 11,
+  "verifier_cpu_usage_percent": 0.2487435,
+  "verifier_memory_usage_mb": 11,
+  "communication_overhead_bytes": 66224
 }

@@ -30,3 +30,4 @@ Cargo.lock
 .clinerules-test
 .clinerules-architect
 memory-bank/
+results/
