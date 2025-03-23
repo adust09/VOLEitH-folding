@@ -35,17 +35,16 @@ fn main() -> eyre::Result<()> {
             let (circuit_path, private_path, public_path, output_prefix) = if circuit_type
                 == "hash_chain"
             {
-                // Currently only F2 is supported by the underlying prover system
-                if field_type != "f2" {
-                    return Err(eyre::eyre!(
-                        "Hash chain circuit is only available for F2 field due to limitations in the underlying proving system. \
-                        Although we've created an F64 hash chain circuit implementation, the current prover only supports F2 for hash chains."
-                    ));
-                }
                 (
-                    format!("src/circuits/poseidon/f2/hash_chain/poseidon_chain.txt"),
-                    format!("src/circuits/poseidon/f2/hash_chain/poseidon_chain_private.txt"),
-                    format!("src/circuits/poseidon/f2/hash_chain/poseidon_chain_public.txt"),
+                    format!("src/circuits/poseidon/{}/hash_chain/poseidon_chain.txt", field_type),
+                    format!(
+                        "src/circuits/poseidon/{}/hash_chain/poseidon_chain_private.txt",
+                        field_type
+                    ),
+                    format!(
+                        "src/circuits/poseidon/{}/hash_chain/poseidon_chain_public.txt",
+                        field_type
+                    ),
                     format!("hash_chain_{}", field_type),
                 )
             } else {
