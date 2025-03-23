@@ -28,28 +28,23 @@ The following benchmark results were obtained on a test machine using the VOLEit
 
 ## Consolidated Benchmark Results
 
-| Metric                   | F_2 Field     | F_64 Field    | F_2 Hash Chain (10 iterations) | F_64 Hash Chain (10 iterations) |
-|--------------------------|---------------|---------------|--------------------------------|--------------------------------|
-| Proof Generation Time    | 103 ms        | 110 ms        | 114 ms                         | N/A (Not runnable)             |
-| Proof Verification Time  | 49 ms         | 64 ms         | 69 ms                          | N/A (Not runnable)             |
-| Proof Size               | 24,324 bytes  | 48,269 bytes  | 58,569 bytes                   | N/A (Not runnable)             |
-| Prover Computation Load  | 0.18% CPU, 0.01 MB | 0.29% CPU, 0.01 MB | 0.30% CPU, 0.01 MB          | N/A (Not runnable)             |
-| Verifier Computation Load| 0.14% CPU, 0.01 MB | 0.24% CPU, 0.01 MB | 0.27% CPU, 0.01 MB          | N/A (Not runnable)             |
-| Communication Overhead   | 26,054 bytes  | 66,245 bytes  | 78,712 bytes                   | N/A (Not runnable)             |
-| Implementation Status    | Complete      | Complete      | Complete                       | Complete but not runnable      |
+| Metric                   | F_2 Field     | F_2 Hash Chain (10 iterations) |
+|--------------------------|---------------|---------------|--------------------------------|
+| Proof Generation Time    | 103 ms        | 114 ms                         |
+| Proof Verification Time  | 49 ms         | 69 ms                          |
+| Proof Size               | 24,324 bytes  | 58,569 bytes                   |
+| Prover Computation Load  | 0.18% CPU, 0.01 MB | 0.30% CPU, 0.01 MB        |
+| Verifier Computation Load| 0.14% CPU, 0.01 MB | 0.27% CPU, 0.01 MB        |
+| Communication Overhead   | 26,054 bytes  | 66,245 bytes  | 78,712 bytes   |
+| Implementation Status    | Complete      | Complete      | Complete       |
 
 ## Running the Benchmarks
 
 You can run the benchmarks yourself using the following commands:
 
-For F_2 field:
+For F_2 field single hash:
 ```bash
 cargo run --bin voleitH-bench -- prove --field f2
-```
-
-For F_64 field:
-```bash
-cargo run --bin voleitH-bench -- prove --field f64
 ```
 
 For F_2 Hash Chain (10 iterations):
@@ -63,30 +58,3 @@ These commands will:
 3. Save the proof to `results/proofs/proof_[field].json` (e.g., `results/proofs/proof_f2.json`)
 4. Save the metrics to `results/metrics/metrics_[field].json` (e.g., `results/metrics/metrics_f2.json`)
 5. Display the measurement matrix in the console
-
-Observations:
-- The F_64 field implementation generates proofs that are approximately 2x larger than F_2
-- Computation time is slightly higher for F_64 compared to F_2
-- Communication overhead scales proportionally with the proof size
-- CPU and memory usage remain minimal in both implementations
-- For hash chains, the F_2 implementation shows ~2.4x larger proof size compared to single hash operation
-- Hash chain operations have approximately 3x larger communication overhead compared to single hash operations
-
-The F64 Hash Chain (10 iterations) has been fully implemented in this project with the circuit available at `src/circuits/poseidon/f64/hash_chain/poseidon_chain.txt`. However, there is a limitation in the underlying proving system (Schmivitz library) that currently only supports F2 field for hash chain operations.
-
-When attempting to run F_64 Hash Chain benchmark:
-```bash
-cargo run -- prove --field f64 --circuit hash_chain
-```
-
-The system produces the following error:
-```
-Error: Hash chain circuit is only available for F2 field due to limitations in the underlying proving system.
-Although we've created an F64 hash chain circuit implementation, the current prover only supports F2 for hash chains.
-```
-
-Based on the relative performance of F64 vs F2 in single hash operations, when support is added to the underlying prover, we can expect the F_64 Hash Chain to have:
-- Proof Size: Likely ~2-2.5x larger than F2 Hash Chain (~120-150KB)
-- Proof Generation Time: ~20-30% higher than F2 Hash Chain
-- Verification Time: ~20-30% higher than F2 Hash Chain
-- Communication Overhead: Proportional to the proof size increase (~160-190KB)
