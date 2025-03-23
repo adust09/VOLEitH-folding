@@ -1,0 +1,1105 @@
+version 2.0.0;
+private_input;
+@type field 2;
+@begin
+    // Inputs for first hash iteration
+    <1>; // $0
+    <0>; // $1
+    <1>; // $2
+    <1>; // $6
+    <0>; // $7
+    <1>; // $8
+    <1>; // $21
+    <0>; // $22
+    <1>; // $23
+
+    // Inputs for second hash iteration
+    <0>; // $51 - zero for chaining with first hash
+    <1>; // $53
+    <0>; // $54
+    <1>; // $58
+    <0>; // $59
+    <1>; // $60
+    <1>; // $73
+    <0>; // $74
+    
+    <1>; // $75
+
+    // Inputs for third hash iteration
+    <0>; // $103 - zero for chaining with second hash
+    <1>; // $105
+    <0>; // $106
+    <1>; // $110
+    <0>; // $111
+    <1>; // $112
+    <1>; // $125
+    <0>; // $126
+    <1>; // $127
+
+    // Inputs for fourth hash iteration
+    <0>; // $155 - zero for chaining with third hash
+    <1>; // $157
+    <0>; // $158
+    <1>; // $162
+    <0>; // $163
+    <1>; // $164
+    <1>; // $177
+    <0>; // $178
+    <1>; // $179
+
+    // Inputs for fifth hash iteration
+    <0>; // $207 - zero for chaining with fourth hash
+    <1>; // $209
+    <0>; // $210
+    <1>; // $214
+    <0>; // $215
+    <1>; // $216
+    <1>; // $229
+    <0>; // $230
+    <1>; // $231
+
+    // Inputs for sixth hash iteration
+    <0>; // $259 - zero for chaining with fifth hash
+    <1>; // $261
+    <0>; // $262
+    <1>; // $266
+    <0>; // $267
+    <1>; // $268
+    <1>; // $281
+    <0>; // $282
+    <1>; // $283
+
+    // Inputs for seventh hash iteration
+    <0>; // $311 - zero for chaining with sixth hash
+    <1>; // $313
+    <0>; // $314
+    <1>; // $318
+    <0>; // $319
+    <1>; // $320
+    <1>; // $333
+    <0>; // $334
+    <1>; // $335
+
+    // Inputs for eighth hash iteration
+    <0>; // $363 - zero for chaining with seventh hash
+    <1>; // $365
+    <0>; // $366
+    <1>; // $370
+    <0>; // $371
+    <1>; // $372
+    <1>; // $385
+    <0>; // $386
+    <1>; // $387
+
+    // Inputs for ninth hash iteration
+    <0>; // $415 - zero for chaining with eighth hash
+    <1>; // $417
+    <0>; // $418
+    <1>; // $422
+    <0>; // $423
+    <1>; // $424
+    <1>; // $437
+    <0>; // $438
+    <1>; // $439
+
+    // Inputs for tenth hash iteration
+    <0>; // $467 - zero for chaining with ninth hash
+    <1>; // $469
+    <0>; // $470
+    <1>; // $474
+    <0>; // $475
+    <1>; // $476
+    <1>; // $489
+    <0>; // $490
+    <1>; // $491
+
+    // Inputs for 11th hash iteration
+    <0>; // $519 - zero for chaining with 10th hash
+    <1>; // $521
+    <0>; // $522
+    <1>; // $526
+    <0>; // $527
+    <1>; // $528
+    <1>; // $541
+    <0>; // $542
+    <1>; // $543
+
+    // Inputs for 12th hash iteration
+    <0>; // $571 - zero for chaining with 11th hash
+    <1>; // $573
+    <0>; // $574
+    <1>; // $578
+    <0>; // $579
+    <1>; // $580
+    <1>; // $593
+    <0>; // $594
+    <1>; // $595
+
+    // Inputs for 13th hash iteration
+    <0>; // $623 - zero for chaining with 12th hash
+    <1>; // $625
+    <0>; // $626
+    <1>; // $630
+    <0>; // $631
+    <1>; // $632
+    <1>; // $645
+    <0>; // $646
+    <1>; // $647
+
+    // Inputs for 14th hash iteration
+    <0>; // $675 - zero for chaining with 13th hash
+    <1>; // $677
+    <0>; // $678
+    <1>; // $682
+    <0>; // $683
+    <1>; // $684
+    <1>; // $697
+    <0>; // $698
+    <1>; // $699
+
+    // Inputs for 15th hash iteration
+    <0>; // $727 - zero for chaining with 14th hash
+    <1>; // $729
+    <0>; // $730
+    <1>; // $734
+    <0>; // $735
+    <1>; // $736
+    <1>; // $749
+    <0>; // $750
+    <1>; // $751
+
+    // Inputs for 16th hash iteration
+    <0>; // $779 - zero for chaining with 15th hash
+    <1>; // $781
+    <0>; // $782
+    <1>; // $786
+    <0>; // $787
+    <1>; // $788
+    <1>; // $801
+    <0>; // $802
+    <1>; // $803
+
+    // Inputs for 17th hash iteration
+    <0>; // $831 - zero for chaining with 16th hash
+    <1>; // $833
+    <0>; // $834
+    <1>; // $838
+    <0>; // $839
+    <1>; // $840
+    <1>; // $853
+    <0>; // $854
+    <1>; // $855
+
+    // Inputs for 18th hash iteration
+    <0>; // $883 - zero for chaining with 17th hash
+    <1>; // $885
+    <0>; // $886
+    <1>; // $890
+    <0>; // $891
+    <1>; // $892
+    <1>; // $905
+    <0>; // $906
+    <1>; // $907
+
+    // Inputs for 19th hash iteration
+    <0>; // $935 - zero for chaining with 18th hash
+    <1>; // $937
+    <0>; // $938
+    <1>; // $942
+    <0>; // $943
+    <1>; // $944
+    <1>; // $957
+    <0>; // $958
+    <1>; // $959
+
+    // Inputs for 20th hash iteration
+    <0>; // $987 - zero for chaining with 19th hash
+    <1>; // $989
+    <0>; // $990
+    <1>; // $994
+    <0>; // $995
+    <1>; // $996
+    <1>; // $1009
+    <0>; // $1010
+    <1>; // $1011
+
+    // Inputs for 21st hash iteration
+    <0>; // $1039 - zero for chaining with 20th hash
+    <1>; // $1041
+    <0>; // $1042
+    <1>; // $1046
+    <0>; // $1047
+    <1>; // $1048
+    <1>; // $1061
+    <0>; // $1062
+    <1>; // $1063
+
+    // Inputs for 22nd hash iteration
+    <0>; // $1091 - zero for chaining with 21st hash
+    <1>; // $1093
+    <0>; // $1094
+    <1>; // $1098
+    <0>; // $1099
+    <1>; // $1100
+    <1>; // $1113
+    <0>; // $1114
+    <1>; // $1115
+
+    // Inputs for 23rd hash iteration
+    <0>; // $1143 - zero for chaining with 22nd hash
+    <1>; // $1145
+    <0>; // $1146
+    <1>; // $1150
+    <0>; // $1151
+    <1>; // $1152
+    <1>; // $1165
+    <0>; // $1166
+    <1>; // $1167
+
+    // Inputs for 24th hash iteration
+    <0>; // $1195 - zero for chaining with 23rd hash
+    <1>; // $1197
+    <0>; // $1198
+    <1>; // $1202
+    <0>; // $1203
+    <1>; // $1204
+    <1>; // $1217
+    <0>; // $1218
+    <1>; // $1219
+
+    // Inputs for 25th hash iteration
+    <0>; // $1247 - zero for chaining with 24th hash
+    <1>; // $1249
+    <0>; // $1250
+    <1>; // $1254
+    <0>; // $1255
+    <1>; // $1256
+    <1>; // $1269
+    <0>; // $1270
+    <1>; // $1271
+
+    // Inputs for 26th hash iteration
+    <0>; // $1299 - zero for chaining with 25th hash
+    <1>; // $1301
+    <0>; // $1302
+    <1>; // $1306
+    <0>; // $1307
+    <1>; // $1308
+    <1>; // $1321
+    <0>; // $1322
+    <1>; // $1323
+
+    // Inputs for 27th hash iteration
+    <0>; // $1351 - zero for chaining with 26th hash
+    <1>; // $1353
+    <0>; // $1354
+    <1>; // $1358
+    <0>; // $1359
+    <1>; // $1360
+    <1>; // $1373
+    <0>; // $1374
+    <1>; // $1375
+
+    // Inputs for 28th hash iteration
+    <0>; // $1403 - zero for chaining with 27th hash
+    <1>; // $1405
+    <0>; // $1406
+    <1>; // $1410
+    <0>; // $1411
+    <1>; // $1412
+    <1>; // $1425
+    <0>; // $1426
+    <1>; // $1427
+
+    // Inputs for 29th hash iteration
+    <0>; // $1455 - zero for chaining with 28th hash
+    <1>; // $1457
+    <0>; // $1458
+    <1>; // $1462
+    <0>; // $1463
+    <1>; // $1464
+    <1>; // $1477
+    <0>; // $1478
+    <1>; // $1479
+
+    // Inputs for 30th hash iteration
+    <0>; // $1507 - zero for chaining with 29th hash
+    <1>; // $1509
+    <0>; // $1510
+    <1>; // $1514
+    <0>; // $1515
+    <1>; // $1516
+    <1>; // $1529
+    <0>; // $1530
+    <1>; // $1531
+
+    // Inputs for 31st hash iteration
+    <0>; // $1559 - zero for chaining with 30th hash
+    <1>; // $1561
+    <0>; // $1562
+    <1>; // $1566
+    <0>; // $1567
+    <1>; // $1568
+    <1>; // $1581
+    <0>; // $1582
+    <1>; // $1583
+
+    // Inputs for 32nd hash iteration
+    <0>; // $1611 - zero for chaining with 31st hash
+    <1>; // $1613
+    <0>; // $1614
+    <1>; // $1618
+    <0>; // $1619
+    <1>; // $1620
+    <1>; // $1633
+    <0>; // $1634
+    <1>; // $1635
+
+    // Inputs for 33rd hash iteration
+    <0>; // $1663 - zero for chaining with 32nd hash
+    <1>; // $1665
+    <0>; // $1666
+    <1>; // $1670
+    <0>; // $1671
+    <1>; // $1672
+    <1>; // $1685
+    <0>; // $1686
+    <1>; // $1687
+
+    // Inputs for 34th hash iteration
+    <0>; // $1715 - zero for chaining with 33rd hash
+    <1>; // $1717
+    <0>; // $1718
+    <1>; // $1722
+    <0>; // $1723
+    <1>; // $1724
+    <1>; // $1737
+    <0>; // $1738
+    <1>; // $1739
+
+    // Inputs for 35th hash iteration
+    <0>; // $1767 - zero for chaining with 34th hash
+    <1>; // $1769
+    <0>; // $1770
+    <1>; // $1774
+    <0>; // $1775
+    <1>; // $1776
+    <1>; // $1789
+    <0>; // $1790
+    <1>; // $1791
+
+    // Inputs for 36th hash iteration
+    <0>; // $1819 - zero for chaining with 35th hash
+    <1>; // $1821
+    <0>; // $1822
+    <1>; // $1826
+    <0>; // $1827
+    <1>; // $1828
+    <1>; // $1841
+    <0>; // $1842
+    <1>; // $1843
+
+    // Inputs for 37th hash iteration
+    <0>; // $1871 - zero for chaining with 36th hash
+    <1>; // $1873
+    <0>; // $1874
+    <1>; // $1878
+    <0>; // $1879
+    <1>; // $1880
+    <1>; // $1893
+    <0>; // $1894
+    <1>; // $1895
+
+    // Inputs for 38th hash iteration
+    <0>; // $1923 - zero for chaining with 37th hash
+    <1>; // $1925
+    <0>; // $1926
+    <1>; // $1930
+    <0>; // $1931
+    <1>; // $1932
+    <1>; // $1945
+    <0>; // $1946
+    <1>; // $1947
+
+    // Inputs for 39th hash iteration
+    <0>; // $1975 - zero for chaining with 38th hash
+    <1>; // $1977
+    <0>; // $1978
+    <1>; // $1982
+    <0>; // $1983
+    <1>; // $1984
+    <1>; // $1997
+    <0>; // $1998
+    <1>; // $1999
+
+    // Inputs for 40th hash iteration
+    <0>; // $2027 - zero for chaining with 39th hash
+    <1>; // $2029
+    <0>; // $2030
+    <1>; // $2034
+    <0>; // $2035
+    <1>; // $2036
+    <1>; // $2049
+    <0>; // $2050
+    <1>; // $2051
+
+    // Inputs for 41st hash iteration
+    <0>; // $2079 - zero for chaining with 40th hash
+    <1>; // $2081
+    <0>; // $2082
+    <1>; // $2086
+    <0>; // $2087
+    <1>; // $2088
+    <1>; // $2101
+    <0>; // $2102
+    <1>; // $2103
+
+    // Inputs for 42nd hash iteration
+    <0>; // $2131 - zero for chaining with 41st hash
+    <1>; // $2133
+    <0>; // $2134
+    <1>; // $2138
+    <0>; // $2139
+    <1>; // $2140
+    <1>; // $2153
+    <0>; // $2154
+    <1>; // $2155
+
+    // Inputs for 43rd hash iteration
+    <0>; // $2183 - zero for chaining with 42nd hash
+    <1>; // $2185
+    <0>; // $2186
+    <1>; // $2190
+    <0>; // $2191
+    <1>; // $2192
+    <1>; // $2205
+    <0>; // $2206
+    <1>; // $2207
+
+    // Inputs for 44th hash iteration
+    <0>; // $2235 - zero for chaining with 43rd hash
+    <1>; // $2237
+    <0>; // $2238
+    <1>; // $2242
+    <0>; // $2243
+    <1>; // $2244
+    <1>; // $2257
+    <0>; // $2258
+    <1>; // $2259
+
+    // Inputs for 45th hash iteration
+    <0>; // $2287 - zero for chaining with 44th hash
+    <1>; // $2289
+    <0>; // $2290
+    <1>; // $2294
+    <0>; // $2295
+    <1>; // $2296
+    <1>; // $2309
+    <0>; // $2310
+    <1>; // $2311
+
+    // Inputs for 46th hash iteration
+    <0>; // $2339 - zero for chaining with 45th hash
+    <1>; // $2341
+    <0>; // $2342
+    <1>; // $2346
+    <0>; // $2347
+    <1>; // $2348
+    <1>; // $2361
+    <0>; // $2362
+    <1>; // $2363
+
+    // Inputs for 47th hash iteration
+    <0>; // $2391 - zero for chaining with 46th hash
+    <1>; // $2393
+    <0>; // $2394
+    <1>; // $2398
+    <0>; // $2399
+    <1>; // $2400
+    <1>; // $2413
+    <0>; // $2414
+    <1>; // $2415
+
+    // Inputs for 48th hash iteration
+    <0>; // $2443 - zero for chaining with 47th hash
+    <1>; // $2445
+    <0>; // $2446
+    <1>; // $2450
+    <0>; // $2451
+    <1>; // $2452
+    <1>; // $2465
+    <0>; // $2466
+    <1>; // $2467
+
+    // Inputs for 49th hash iteration
+    <0>; // $2495 - zero for chaining with 48th hash
+    <1>; // $2497
+    <0>; // $2498
+    <1>; // $2502
+    <0>; // $2503
+    <1>; // $2504
+    <1>; // $2517
+    <0>; // $2518
+    <1>; // $2519
+
+    // Inputs for 50th hash iteration
+    <0>; // $2547 - zero for chaining with 49th hash
+    <1>; // $2549
+    <0>; // $2550
+    <1>; // $2554
+    <0>; // $2555
+    <1>; // $2556
+    <1>; // $2569
+    <0>; // $2570
+    <1>; // $2571
+
+    // Inputs for 51st hash iteration
+    <0>; // $2599 - zero for chaining with 50th hash
+    <1>; // $2601
+    <0>; // $2602
+    <1>; // $2606
+    <0>; // $2607
+    <1>; // $2608
+    <1>; // $2621
+    <0>; // $2622
+    <1>; // $2623
+
+    // Inputs for 52nd hash iteration
+    <0>; // $2651 - zero for chaining with 51st hash
+    <1>; // $2653
+    <0>; // $2654
+    <1>; // $2658
+    <0>; // $2659
+    <1>; // $2660
+    <1>; // $2673
+    <0>; // $2674
+    <1>; // $2675
+
+    // Inputs for 53rd hash iteration
+    <0>; // $2703 - zero for chaining with 52nd hash
+    <1>; // $2705
+    <0>; // $2706
+    <1>; // $2710
+    <0>; // $2711
+    <1>; // $2712
+    <1>; // $2725
+    <0>; // $2726
+    <1>; // $2727
+
+    // Inputs for 54th hash iteration
+    <0>; // $2755 - zero for chaining with 53rd hash
+    <1>; // $2757
+    <0>; // $2758
+    <1>; // $2762
+    <0>; // $2763
+    <1>; // $2764
+    <1>; // $2777
+    <0>; // $2778
+    <1>; // $2779
+
+    // Inputs for 55th hash iteration
+    <0>; // $2807 - zero for chaining with 54th hash
+    <1>; // $2809
+    <0>; // $2810
+    <1>; // $2814
+    <0>; // $2815
+    <1>; // $2816
+    <1>; // $2829
+    <0>; // $2830
+    <1>; // $2831
+
+    // Inputs for 56th hash iteration
+    <0>; // $2859 - zero for chaining with 55th hash
+    <1>; // $2861
+    <0>; // $2862
+    <1>; // $2866
+    <0>; // $2867
+    <1>; // $2868
+    <1>; // $2881
+    <0>; // $2882
+    <1>; // $2883
+
+    // Inputs for 57th hash iteration
+    <0>; // $2911 - zero for chaining with 56th hash
+    <1>; // $2913
+    <0>; // $2914
+    <1>; // $2918
+    <0>; // $2919
+    <1>; // $2920
+    <1>; // $2933
+    <0>; // $2934
+    <1>; // $2935
+
+    // Inputs for 58th hash iteration
+    <0>; // $2963 - zero for chaining with 57th hash
+    <1>; // $2965
+    <0>; // $2966
+    <1>; // $2970
+    <0>; // $2971
+    <1>; // $2972
+    <1>; // $2985
+    <0>; // $2986
+    <1>; // $2987
+
+    // Inputs for 59th hash iteration
+    <0>; // $3015 - zero for chaining with 58th hash
+    <1>; // $3017
+    <0>; // $3018
+    <1>; // $3022
+    <0>; // $3023
+    <1>; // $3024
+    <1>; // $3037
+    <0>; // $3038
+    <1>; // $3039
+
+    // Inputs for 60th hash iteration
+    <0>; // $3067 - zero for chaining with 59th hash
+    <1>; // $3069
+    <0>; // $3070
+    <1>; // $3074
+    <0>; // $3075
+    <1>; // $3076
+    <1>; // $3089
+    <0>; // $3090
+    <1>; // $3091
+
+    // Inputs for 61st hash iteration
+    <0>; // $3119 - zero for chaining with 60th hash
+    <1>; // $3121
+    <0>; // $3122
+    <1>; // $3126
+    <0>; // $3127
+    <1>; // $3128
+    <1>; // $3141
+    <0>; // $3142
+    <1>; // $3143
+
+    // Inputs for 62nd hash iteration
+    <0>; // $3171 - zero for chaining with 61st hash
+    <1>; // $3173
+    <0>; // $3174
+    <1>; // $3178
+    <0>; // $3179
+    <1>; // $3180
+    <1>; // $3193
+    <0>; // $3194
+    <1>; // $3195
+
+    // Inputs for 63rd hash iteration
+    <0>; // $3223 - zero for chaining with 62nd hash
+    <1>; // $3225
+    <0>; // $3226
+    <1>; // $3230
+    <0>; // $3231
+    <1>; // $3232
+    <1>; // $3245
+    <0>; // $3246
+    <1>; // $3247
+
+    // Inputs for 64th hash iteration
+    <0>; // $3275 - zero for chaining with 63rd hash
+    <1>; // $3277
+    <0>; // $3278
+    <1>; // $3282
+    <0>; // $3283
+    <1>; // $3284
+    <1>; // $3297
+    <0>; // $3298
+    <1>; // $3299
+
+    // Inputs for 65th hash iteration
+    <0>; // $3327 - zero for chaining with 64th hash
+    <1>; // $3329
+    <0>; // $3330
+    <1>; // $3334
+    <0>; // $3335
+    <1>; // $3336
+    <1>; // $3349
+    <0>; // $3350
+    <1>; // $3351
+
+    // Inputs for 66th hash iteration
+    <0>; // $3379 - zero for chaining with 65th hash
+    <1>; // $3381
+    <0>; // $3382
+    <1>; // $3386
+    <0>; // $3387
+    <1>; // $3388
+    <1>; // $3401
+    <0>; // $3402
+    <1>; // $3403
+
+    // Inputs for 67th hash iteration
+    <0>; // $3431 - zero for chaining with 66th hash
+    <1>; // $3433
+    <0>; // $3434
+    <1>; // $3438
+    <0>; // $3439
+    <1>; // $3440
+    <1>; // $3453
+    <0>; // $3454
+    <1>; // $3455
+
+    // Inputs for 68th hash iteration
+    <0>; // $3483 - zero for chaining with 67th hash
+    <1>; // $3485
+    <0>; // $3486
+    <1>; // $3490
+    <0>; // $3491
+    <1>; // $3492
+    <1>; // $3505
+    <0>; // $3506
+    <1>; // $3507
+
+    // Inputs for 69th hash iteration
+    <0>; // $3535 - zero for chaining with 68th hash
+    <1>; // $3537
+    <0>; // $3538
+    <1>; // $3542
+    <0>; // $3543
+    <1>; // $3544
+    <1>; // $3557
+    <0>; // $3558
+    <1>; // $3559
+
+    // Inputs for 70th hash iteration
+    <0>; // $3587 - zero for chaining with 69th hash
+    <1>; // $3589
+    <0>; // $3590
+    <1>; // $3594
+    <0>; // $3595
+    <1>; // $3596
+    <1>; // $3609
+    <0>; // $3610
+    <1>; // $3611
+
+    // Inputs for 71st hash iteration
+    <0>; // $3639 - zero for chaining with 70th hash
+    <1>; // $3641
+    <0>; // $3642
+    <1>; // $3646
+    <0>; // $3647
+    <1>; // $3648
+    <1>; // $3661
+    <0>; // $3662
+    <1>; // $3663
+
+    // Inputs for 72nd hash iteration
+    <0>; // $3691 - zero for chaining with 71st hash
+    <1>; // $3693
+    <0>; // $3694
+    <1>; // $3698
+    <0>; // $3699
+    <1>; // $3700
+    <1>; // $3713
+    <0>; // $3714
+    <1>; // $3715
+
+    // Inputs for 73rd hash iteration
+    <0>; // $3743 - zero for chaining with 72nd hash
+    <1>; // $3745
+    <0>; // $3746
+    <1>; // $3750
+    <0>; // $3751
+    <1>; // $3752
+    <1>; // $3765
+    <0>; // $3766
+    <1>; // $3767
+
+    // Inputs for 74th hash iteration
+    <0>; // $3795 - zero for chaining with 73rd hash
+    <1>; // $3797
+    <0>; // $3798
+    <1>; // $3802
+    <0>; // $3803
+    <1>; // $3804
+    <1>; // $3817
+    <0>; // $3818
+    <1>; // $3819
+
+    // Inputs for 75th hash iteration
+    <0>; // $3847 - zero for chaining with 74th hash
+    <1>; // $3849
+    <0>; // $3850
+    <1>; // $3854
+    <0>; // $3855
+    <1>; // $3856
+    <1>; // $3869
+    <0>; // $3870
+    <1>; // $3871
+
+    // Inputs for 76th hash iteration
+    <0>; // $3899 - zero for chaining with 75th hash
+    <1>; // $3901
+    <0>; // $3902
+    <1>; // $3906
+    <0>; // $3907
+    <1>; // $3908
+    <1>; // $3921
+    <0>; // $3922
+    <1>; // $3923
+
+    // Inputs for 77th hash iteration
+    <0>; // $3951 - zero for chaining with 76th hash
+    <1>; // $3953
+    <0>; // $3954
+    <1>; // $3958
+    <0>; // $3959
+    <1>; // $3960
+    <1>; // $3973
+    <0>; // $3974
+    <1>; // $3975
+
+    // Inputs for 78th hash iteration
+    <0>; // $4003 - zero for chaining with 77th hash
+    <1>; // $4005
+    <0>; // $4006
+    <1>; // $4010
+    <0>; // $4011
+    <1>; // $4012
+    <1>; // $4025
+    <0>; // $4026
+    <1>; // $4027
+
+    // Inputs for 79th hash iteration
+    <0>; // $4055 - zero for chaining with 78th hash
+    <1>; // $4057
+    <0>; // $4058
+    <1>; // $4062
+    <0>; // $4063
+    <1>; // $4064
+    <1>; // $4077
+    <0>; // $4078
+    <1>; // $4079
+
+    // Inputs for 80th hash iteration
+    <0>; // $4107 - zero for chaining with 79th hash
+    <1>; // $4109
+    <0>; // $4110
+    <1>; // $4114
+    <0>; // $4115
+    <1>; // $4116
+    <1>; // $4129
+    <0>; // $4130
+    <1>; // $4131
+
+    // Inputs for 81st hash iteration
+    <0>; // $4159 - zero for chaining with 80th hash
+    <1>; // $4161
+    <0>; // $4162
+    <1>; // $4166
+    <0>; // $4167
+    <1>; // $4168
+    <1>; // $4181
+    <0>; // $4182
+    <1>; // $4183
+
+    // Inputs for 82nd hash iteration
+    <0>; // $4211 - zero for chaining with 81st hash
+    <1>; // $4213
+    <0>; // $4214
+    <1>; // $4218
+    <0>; // $4219
+    <1>; // $4220
+    <1>; // $4233
+    <0>; // $4234
+    <1>; // $4235
+
+    // Inputs for 83rd hash iteration
+    <0>; // $4263 - zero for chaining with 82nd hash
+    <1>; // $4265
+    <0>; // $4266
+    <1>; // $4270
+    <0>; // $4271
+    <1>; // $4272
+    <1>; // $4285
+    <0>; // $4286
+    <1>; // $4287
+
+    // Inputs for 84th hash iteration
+    <0>; // $4315 - zero for chaining with 83rd hash
+    <1>; // $4317
+    <0>; // $4318
+    <1>; // $4322
+    <0>; // $4323
+    <1>; // $4324
+    <1>; // $4337
+    <0>; // $4338
+    <1>; // $4339
+
+    // Inputs for 85th hash iteration
+    <0>; // $4367 - zero for chaining with 84th hash
+    <1>; // $4369
+    <0>; // $4370
+    <1>; // $4374
+    <0>; // $4375
+    <1>; // $4376
+    <1>; // $4389
+    <0>; // $4390
+    <1>; // $4391
+
+    // Inputs for 86th hash iteration
+    <0>; // $4419 - zero for chaining with 85th hash
+    <1>; // $4421
+    <0>; // $4422
+    <1>; // $4426
+    <0>; // $4427
+    <1>; // $4428
+    <1>; // $4441
+    <0>; // $4442
+    <1>; // $4443
+
+    // Inputs for 87th hash iteration
+    <0>; // $4471 - zero for chaining with 86th hash
+    <1>; // $4473
+    <0>; // $4474
+    <1>; // $4478
+    <0>; // $4479
+    <1>; // $4480
+    <1>; // $4493
+    <0>; // $4494
+    <1>; // $4495
+
+    // Inputs for 88th hash iteration
+    <0>; // $4523 - zero for chaining with 87th hash
+    <1>; // $4525
+    <0>; // $4526
+    <1>; // $4530
+    <0>; // $4531
+    <1>; // $4532
+    <1>; // $4545
+    <0>; // $4546
+    <1>; // $4547
+
+    // Inputs for 89th hash iteration
+    <0>; // $4575 - zero for chaining with 88th hash
+    <1>; // $4577
+    <0>; // $4578
+    <1>; // $4582
+    <0>; // $4583
+    <1>; // $4584
+    <1>; // $4597
+    <0>; // $4598
+    <1>; // $4599
+
+    // Inputs for 90th hash iteration
+    <0>; // $4627 - zero for chaining with 89th hash
+    <1>; // $4629
+    <0>; // $4630
+    <1>; // $4634
+    <0>; // $4635
+    <1>; // $4636
+    <1>; // $4649
+    <0>; // $4650
+    <1>; // $4651
+
+    // Inputs for 91st hash iteration
+    <0>; // $4679 - zero for chaining with 90th hash
+    <1>; // $4681
+    <0>; // $4682
+    <1>; // $4686
+    <0>; // $4687
+    <1>; // $4688
+    <1>; // $4701
+    <0>; // $4702
+    <1>; // $4703
+
+    // Inputs for 92nd hash iteration
+    <0>; // $4731 - zero for chaining with 91st hash
+    <1>; // $4733
+    <0>; // $4734
+    <1>; // $4738
+    <0>; // $4739
+    <1>; // $4740
+    <1>; // $4753
+    <0>; // $4754
+    <1>; // $4755
+
+    // Inputs for 93rd hash iteration
+    <0>; // $4783 - zero for chaining with 92nd hash
+    <1>; // $4785
+    <0>; // $4786
+    <1>; // $4790
+    <0>; // $4791
+    <1>; // $4792
+    <1>; // $4805
+    <0>; // $4806
+    <1>; // $4807
+
+    // Inputs for 94th hash iteration
+    <0>; // $4835 - zero for chaining with 93rd hash
+    <1>; // $4837
+    <0>; // $4838
+    <1>; // $4842
+    <0>; // $4843
+    <1>; // $4844
+    <1>; // $4857
+    <0>; // $4858
+    <1>; // $4859
+
+    // Inputs for 95th hash iteration
+    <0>; // $4887 - zero for chaining with 94th hash
+    <1>; // $4889
+    <0>; // $4890
+    <1>; // $4894
+    <0>; // $4895
+    <1>; // $4896
+    <1>; // $4909
+    <0>; // $4910
+    <1>; // $4911
+
+    // Inputs for 96th hash iteration
+    <0>; // $4939 - zero for chaining with 95th hash
+    <1>; // $4941
+    <0>; // $4942
+    <1>; // $4946
+    <0>; // $4947
+    <1>; // $4948
+    <1>; // $4961
+    <0>; // $4962
+    <1>; // $4963
+
+    // Inputs for 97th hash iteration
+    <0>; // $4991 - zero for chaining with 96th hash
+    <1>; // $4993
+    <0>; // $4994
+    <1>; // $4998
+    <0>; // $4999
+    <1>; // $5000
+    <1>; // $5013
+    <0>; // $5014
+    <1>; // $5015
+
+    // Inputs for 98th hash iteration
+    <0>; // $5043 - zero for chaining with 97th hash
+    <1>; // $5045
+    <0>; // $5046
+    <1>; // $5050
+    <0>; // $5051
+    <1>; // $5052
+    <1>; // $5065
+    <0>; // $5066
+    <1>; // $5067
+
+    // Inputs for 99th hash iteration
+    <0>; // $5095 - zero for chaining with 98th hash
+    <1>; // $5097
+    <0>; // $5098
+    <1>; // $5102
+    <0>; // $5103
+    <1>; // $5104
+    <1>; // $5117
+    <0>; // $5118
+    <1>; // $5119
+
+    // Inputs for 100th hash iteration
+    <0>; // $5147 - zero for chaining with 99th hash
+    <1>; // $5149
+    <0>; // $5150
+    <1>; // $5154
+    <0>; // $5155
+    <1>; // $5156
+    <1>; // $5169
+    <0>; // $5170
+    <1>; // $5171
+@end

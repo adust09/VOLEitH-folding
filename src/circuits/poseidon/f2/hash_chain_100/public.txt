@@ -1,0 +1,6 @@
+version 2.0.0;
+public_input;
+@type field 2;
+@begin
+    <0>;  // We don't need any public inputs for this example
+@end

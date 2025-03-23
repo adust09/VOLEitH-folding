@@ -26,36 +26,18 @@ fn main() -> eyre::Result<()> {
 
     match &cli.command {
         Some(Commands::Prove { field, circuit }) => {
-            let field_type = field.as_deref().unwrap_or("f64");
-            let circuit_type = circuit.as_deref().unwrap_or("standard");
+            let field_type = field.as_deref().unwrap_or("f2");
+            let circuit_type = circuit.as_deref().unwrap_or("single");
 
             println!("Running prove with field: {}, circuit: {}", field_type, circuit_type);
 
             // Different output paths based on circuit type
-            let (circuit_path, private_path, public_path, output_prefix) = if circuit_type
-                == "hash_chain"
-            {
-                (
-                    format!("src/circuits/poseidon/{}/hash_chain/poseidon_chain.txt", field_type),
-                    format!(
-                        "src/circuits/poseidon/{}/hash_chain/poseidon_chain_private.txt",
-                        field_type
-                    ),
-                    format!(
-                        "src/circuits/poseidon/{}/hash_chain/poseidon_chain_public.txt",
-                        field_type
-                    ),
-                    format!("hash_chain_{}", field_type),
-                )
-            } else {
-                // Single Poseidon circuit
-                (
-                    format!("src/circuits/poseidon/{}/single/poseidon.txt", field_type),
-                    format!("src/circuits/poseidon/{}/single/poseidon_private.txt", field_type),
-                    format!("src/circuits/poseidon/{}/single/poseidon_public.txt", field_type),
-                    format!("standard_{}", field_type),
-                )
-            };
+            let (circuit_path, private_path, public_path, output_prefix) = (
+                format!("src/circuits/poseidon/{}/{}/circuit.txt", field_type, circuit_type),
+                format!("src/circuits/poseidon/{}/{}/private.txt", field_type, circuit_type),
+                format!("src/circuits/poseidon/{}/{}/public.txt", field_type, circuit_type),
+                format!("{}_{}", field_type, circuit_type),
+            );
 
             // Create output paths
             let output_path = format!("results/proofs/proof_{}.json", output_prefix);
