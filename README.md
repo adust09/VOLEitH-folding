@@ -28,7 +28,7 @@ The following benchmark results were obtained on a test machine using the VOLEit
 
 ## Consolidated Benchmark Results
 
-| Metric                   | F_2 Field     | F_2 Hash Chain (10 iterations) |
+| Metric                   | F_2 Single Hash     | F_2 Hash Chain (10 iterations) |
 |--------------------------|---------------|--------------------------------|
 | Proof Generation Time    | 103 ms        | 114 ms                         |
 | Proof Verification Time  | 49 ms         | 69 ms                          |
