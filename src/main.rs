@@ -1,4 +1,3 @@
-mod keccak;
 mod prove;
 
 use clap::Parser;
