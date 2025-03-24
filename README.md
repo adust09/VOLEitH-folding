@@ -1,9 +1,10 @@
 # Project Details
+
 This project investigates the feasibility of on-chain verification for VOLE in the Head (VOLE itH), a publicly verifiable and efficient variant of VOLE-based zero-knowledge (ZK) proofs. While VOLE-based ZK systems significantly reduce computational complexity for provers, the challenge lies in implementing cost-effective and scalable on-chain verification.
 
 VOLE-based ZK systems are typically designed for efficient prover but are not yet widely implemented for on-chain verification due to challenges such as proof size, communication costs, and gas costs. VOLE itH introduces public verifiability, making it a promising candidate for practical zk schemes for on-chain applications via client-side provers. However, the exact costs and technical bottlenecks of integrating VOLE itH into a public blockchain, such as Ethereum, remain unclear.
 
-# Measurement matrix
+## Measurement matrix
 
 | Metric                   | Description                                                                                 | Unit                | Example Measurement Method                                                                     |
 |--------------------------|---------------------------------------------------------------------------------------------|---------------------|-----------------------------------------------------------------------------------------------|
@@ -22,11 +23,13 @@ The following two methods are used for onchain-verification.
 - SNARK verification + Solidity Verifier
 - Smart Contract
 
-# Benchmark
+## Benchmark
 
-The following benchmark results were obtained on a test machine using the VOLEitH implementation with Poseidon hash in different field sizes:
+The following benchmark results were obtained on a test machine using the VOLEitH implementation with `Poseidon hash`.
 
-## Consolidated Benchmark Results
+- Apple M1 with 16GB memory
+- [VOLE itH Parameters](https://github.com/GaloisInc/swanky/blob/dev/schmivitz/src/parameters.rs)
+
 
 | Metric                   | F_2 Single Hash     | F_2 Hash Chain (10 iterations) |
 |--------------------------|---------------|--------------------------------|
@@ -35,26 +38,25 @@ The following benchmark results were obtained on a test machine using the VOLEit
 | Proof Size               | 24,324 bytes  | 58,569 bytes                   |
 | Prover Computation Load  | 0.18% CPU, 0.01 MB | 0.30% CPU, 0.01 MB        |
 | Verifier Computation Load| 0.14% CPU, 0.01 MB | 0.27% CPU, 0.01 MB        |
-| Communication Overhead   | 26,054 bytes  | 66,245 bytes  | 78,712 bytes   |
-| Implementation Status    | Complete      | Complete      | Complete       |
-
-## Running the Benchmarks
+| Communication Overhead   | 26,054 bytes  | 66,245 bytes                   | 
 
 You can run the benchmarks yourself using the following commands:
 
 For F_2 field single hash:
+
 ```bash
 cargo run --bin voleitH-bench -- prove --field f2
 ```
 
 For F_2 Hash Chain (10 iterations):
 ```bash
-cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain
+cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain_10
 ```
 
 These commands will:
+
 1. Generate proof using the specified field
 2. Measure all metrics during proof generation and verification
-3. Save the proof to `results/proofs/proof_[field].json` (e.g., `results/proofs/proof_f2.json`)
-4. Save the metrics to `results/metrics/metrics_[field].json` (e.g., `results/metrics/metrics_f2.json`)
+3. Save the proof to `results/proofs/proof_[field]_[circuit_type].json`
+4. Save the metrics to `results/metrics/metrics_[field]_[circuit_type].json`
 5. Display the measurement matrix in the console

@@ -26,7 +26,7 @@ fn main() -> eyre::Result<()> {
     match &cli.command {
         Some(Commands::Prove { field, circuit }) => {
             let field_type = field.as_deref().unwrap_or("f2");
-            let circuit_type = circuit.as_deref().unwrap_or("single");
+            let circuit_type = circuit.as_deref().unwrap_or("single_hash");
 
             println!("Running prove with field: {}, circuit: {}", field_type, circuit_type);
 
@@ -39,8 +39,8 @@ fn main() -> eyre::Result<()> {
             );
 
             // Create output paths
-            let output_path = format!("results/proofs/proof_{}.json", output_prefix);
-            let metrics_path = format!("results/metrics/metrics_{}.json", output_prefix);
+            let output_path = format!("results/proofs/{}.json", output_prefix);
+            let metrics_path = format!("results/metrics/{}.json", output_prefix);
 
             // Run proof with the selected circuit
             let metrics =
