@@ -31,3 +31,5 @@ Cargo.lock
 .clinerules-architect
 memory-bank/
 results/
+benchmark_results/
+benchmark_results_chain/

@@ -28,35 +28,28 @@ The following two methods are used for onchain-verification.
 The following benchmark results were obtained on a test machine using the VOLEitH implementation with `Poseidon hash`.
 
 - Apple M1 with 16GB memory
-- [VOLE itH Parameters](https://github.com/GaloisInc/swanky/blob/dev/schmivitz/src/parameters.rs)
-
+- [VOLE itH Parameters](https://github.com/adust09/swanky/blob/dev/schmivitz/src/parameters.rs)
+- F_2 Single Hash and F_2 Hash Chain (10 iterations) values are both the average of 20 runs
 
 | Metric                   | F_2 Single Hash     | F_2 Hash Chain (10 iterations) |
 |--------------------------|---------------|--------------------------------|
-| Proof Generation Time    | 103 ms        | 114 ms                         |
-| Proof Verification Time  | 49 ms         | 69 ms                          |
-| Proof Size               | 24,324 bytes  | 58,569 bytes                   |
-| Prover Computation Load  | 0.18% CPU, 0.01 MB | 0.30% CPU, 0.01 MB        |
-| Verifier Computation Load| 0.14% CPU, 0.01 MB | 0.27% CPU, 0.01 MB        |
-| Communication Overhead   | 26,054 bytes  | 66,245 bytes                   | 
+| Proof Generation Time    | 104.25 ms     | 120.20 ms                      |
+| Proof Verification Time  | 53.55 ms      | 66.85 ms                       |
+| Proof Size               | 24,322 bytes  | 58,582 bytes                   |
+| Prover Computation Load  | 0.16% CPU, 0.01 MB | 0.32% CPU, 0.01 MB        |
+| Verifier Computation Load| 0.15% CPU, 0.01 MB | 0.26% CPU, 0.01 MB        |
+| Communication Overhead   | 26,052 bytes  | 78,725 bytes                   |
 
-You can run the benchmarks yourself using the following commands:
-
-For F_2 field single hash:
+You can run the benchmarks yourself using the following scripts:
 
 ```bash
-cargo run --bin voleitH-bench -- prove --field f2
+./run_benchmark.sh
+./run_hash_chain_benchmark.sh
 ```
 
-For F_2 Hash Chain (10 iterations):
+Or you can run the benchmarks manually using the following commands:
+
 ```bash
-cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain_10
+cargo run --bin voleitH-bench -- prove --field f2 // For F_2 field single hash:
+cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain_10 // For F_2 Hash Chain 10 iterations
 ```
-
-These commands will:
-
-1. Generate proof using the specified field
-2. Measure all metrics during proof generation and verification
-3. Save the proof to `results/proofs/proof_[field]_[circuit_type].json`
-4. Save the metrics to `results/metrics/metrics_[field]_[circuit_type].json`
-5. Display the measurement matrix in the console

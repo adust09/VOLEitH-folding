@@ -13,7 +13,7 @@ This directory contains implementations of the Poseidon hash function for differ
 
 The schmivitz library has been modified to work with F64b instead of F2. Private inputs are now automatically converted from F2 to F64b before circuit evaluation. This means:
 
-1. All `poseidon_private.txt` files use `@type field 2` and contain only binary values (0 or 1)
+1. All `private.txt` files use `@type field 2` and contain only binary values (0 or 1)
 2. During circuit evaluation, these values are converted to F64b
 3. The circuit itself operates in the specified field (F_2, F_128, or Fp)
 
