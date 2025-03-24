@@ -38,18 +38,14 @@ fn main() -> eyre::Result<()> {
                 format!("{}_{}", field_type, circuit_type),
             );
 
-            // Create output paths
+            // Create output path
             let output_path = format!("results/proofs/{}.json", output_prefix);
-            let metrics_path = format!("results/metrics/{}.json", output_prefix);
 
             // Run proof with the selected circuit
-            let metrics =
+            let result =
                 prove::prove_with_paths(&circuit_path, &private_path, &public_path, &output_path)?;
 
-            // Display and save metrics
-            metrics.display();
-            metrics.save_to_file(&metrics_path)?;
-            Ok(())
+            Ok(result)
         }
         None => {
             // Default behavior with improved help message
@@ -78,14 +74,11 @@ fn main() -> eyre::Result<()> {
             );
 
             let output_path = format!("results/proofs/proof_{}.json", output_prefix);
-            let metrics_path = format!("results/metrics/metrics_{}.json", output_prefix);
 
             println!("Running prove with field: {}, circuit: {}", field_type, circuit_type);
-            let metrics =
+            let result =
                 prove::prove_with_paths(&circuit_path, &private_path, &public_path, &output_path)?;
-            metrics.display();
-            metrics.save_to_file(&metrics_path)?;
-            Ok(())
+            Ok(result)
         }
     }
 }
