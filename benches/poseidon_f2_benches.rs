@@ -12,21 +12,40 @@ struct BenchmarkResult {
     proof_generation_time_ms: u64,
     proof_verification_time_ms: u64,
     proof_size_bytes: usize,
-    communication_overhead_bytes: usize, // Added for Prover-Verifier communication
+    communication_overhead_bytes: usize,
     prover_cpu_usage: f32,
     prover_memory_usage_mb: f64,
     verifier_cpu_usage: f32,
     verifier_memory_usage_mb: f64,
 }
 
-fn get_process_usage() -> (f32, f64) {
-    std::thread::sleep(std::time::Duration::from_millis(100));
-
+/// Initialize system monitoring and get the initial CPU/memory values
+fn init_system_monitoring() -> System {
     let mut system = System::new_all();
     system.refresh_all();
 
-    let pid = std::process::id();
+    // Sleep to allow initial measurements to settle
+    std::thread::sleep(std::time::Duration::from_millis(100));
 
+    // Must refresh again to establish the baseline for CPU measurements
+    system.refresh_all();
+
+    system
+}
+
+/// Get process resource usage from a System instance
+/// Note: cpu_usage() already returns the delta since last refresh
+fn get_process_usage(system: &mut System) -> (f32, f64) {
+    // Refresh to get current measurements
+    system.refresh_all();
+
+    // Sleep briefly to allow CPU measurement to register
+    std::thread::sleep(std::time::Duration::from_millis(100));
+
+    // Refresh again to get measurements that account for the time passed
+    system.refresh_all();
+
+    let pid = std::process::id();
     if let Some(process) = system.process(sysinfo::Pid::from_u32(pid)) {
         let cpu_usage = process.cpu_usage();
         let memory_usage = process.memory() as f64 / 1024.0 / 1024.0;
@@ -77,10 +96,9 @@ fn run_proof(
     std::thread::sleep(std::time::Duration::from_millis(200));
 
     // ----- PROVER MEASUREMENTS -----
-    // Measure prover resource usage before proof generation
-    let (cpu_before_prove, mem_before_prove) = get_process_usage();
+    // Initialize system monitoring for prover measurements
+    let mut prover_system = init_system_monitoring();
 
-    // First, generate a proof we'll keep for verification later and measuring size
     let circuit_for_proof = &mut Cursor::new(circuit_bytes_slice);
     let mut transcript_for_proof = create_transcript();
     let rng_for_proof = &mut thread_rng();
@@ -119,8 +137,8 @@ fn run_proof(
     let prove_duration = total_proving_time / NUM_RUNS;
     println!("Average proving time ({} runs): {:?}", NUM_RUNS, prove_duration);
 
-    // Measure prover resource usage after proof generation
-    let (cpu_after_prove, mem_after_prove) = get_process_usage();
+    let (prover_cpu_usage, prover_mem_usage) = get_process_usage(&mut prover_system);
+    println!("Prover CPU Usage: {:.2}%", prover_cpu_usage);
 
     // Calculate proof size in bytes
     let proof_string = format!("{:?}", proof);
@@ -134,9 +152,7 @@ fn run_proof(
     let public_input_size = public_input_content.len();
 
     // Communication overhead includes the proof size and the public inputs
-    // Plus a fixed protocol overhead for messages exchanged (estimated at 128 bytes)
-    let protocol_overhead = 128; // Estimated overhead for protocol messages
-    let communication_overhead_bytes = proof_size_bytes + public_input_size + protocol_overhead;
+    let communication_overhead_bytes = proof_size_bytes + public_input_size;
 
     println!("Communication overhead: {} bytes", communication_overhead_bytes);
 
@@ -144,13 +160,12 @@ fn run_proof(
     std::thread::sleep(std::time::Duration::from_millis(200));
 
     // ----- VERIFIER MEASUREMENTS -----
-    // Measure verifier resource usage before verification
-    let (cpu_before_verify, mem_before_verify) = get_process_usage();
+    // Initialize system monitoring for verifier measurements
+    let mut verifier_system = init_system_monitoring();
 
     // Measure verification time with NUM_RUNS iterations
     let mut total_verification_time = Duration::ZERO;
     for i in 0..NUM_RUNS {
-        // Reset circuit cursor for verification
         let circuit_verify = &mut Cursor::new(circuit_bytes_slice);
         let mut verification_transcript = create_transcript();
 
@@ -165,27 +180,24 @@ fn run_proof(
         );
     }
 
-    // Calculate average verification time
     let verify_duration = total_verification_time / NUM_RUNS;
     println!("Average verification time ({} runs): {:?}", NUM_RUNS, verify_duration);
 
-    // Measure verifier resource usage after verification
-    let (cpu_after_verify, mem_after_verify) = get_process_usage();
+    let (verifier_cpu_usage, verifier_mem_usage) = get_process_usage(&mut verifier_system);
+    println!("Verifier CPU Usage: {:.2}%", verifier_cpu_usage);
 
-    // Compile benchmark results
     BenchmarkResult {
         proof_generation_time_ms: prove_duration.as_millis() as u64,
         proof_verification_time_ms: verify_duration.as_millis() as u64,
         proof_size_bytes,
         communication_overhead_bytes,
-        prover_cpu_usage: cpu_after_prove - cpu_before_prove,
-        prover_memory_usage_mb: mem_after_prove - mem_before_prove,
-        verifier_cpu_usage: cpu_after_verify - cpu_before_verify,
-        verifier_memory_usage_mb: mem_after_verify - mem_before_verify,
+        prover_cpu_usage,
+        prover_memory_usage_mb: prover_mem_usage,
+        verifier_cpu_usage,
+        verifier_memory_usage_mb: verifier_mem_usage,
     }
 }
 
-/// Run a benchmark with detailed measurements for each metric
 fn run_detailed_benchmark(
     c: &mut Criterion,
     group_name: &str,
@@ -193,7 +205,6 @@ fn run_detailed_benchmark(
     private_path: &str,
     public_path: &str,
 ) {
-    // Verify all files exist before benchmarking
     assert!(Path::new(circuit_path).exists(), "Circuit file does not exist at {}", circuit_path);
     assert!(
         Path::new(private_path).exists(),
@@ -208,17 +219,14 @@ fn run_detailed_benchmark(
     let circuit_size = fs::read_to_string(circuit_path).unwrap().len();
     println!("Circuit size: {} bytes", circuit_size);
 
-    // Create a benchmark group
     let mut group = c.benchmark_group(group_name);
     group.sample_size(10); // Run 10 times for Criterion measurements
     group.throughput(Throughput::Bytes(circuit_size as u64));
 
     println!("Running detailed benchmark with 10 iterations...");
 
-    // Run the complete benchmark to get detailed metrics outside of criterion's timing
     let benchmark_result = run_proof(circuit_path, private_path, public_path);
 
-    // --- Benchmark 1: Proof Generation Time using Criterion ---
     println!("Running Criterion measurements for proof generation...");
     group.bench_function("proof_generation_time", |b| {
         b.iter_custom(|iters| {
@@ -248,7 +256,6 @@ fn run_detailed_benchmark(
         });
     });
 
-    // --- Benchmark 2: Proof Verification Time using Criterion ---
     println!("Running Criterion measurements for verification...");
     group.bench_function("proof_verification_time", |b| {
         b.iter_custom(|iters| {
@@ -286,6 +293,7 @@ fn run_detailed_benchmark(
 
     // --- Report comprehensive metrics ---
     println!("\n====== {} BENCHMARK RESULTS ======", group_name);
+    println!("--- Performance Metrics (10-run average) ---");
     println!(
         "Proof Generation Time: {:?} ({} ms)",
         Duration::from_millis(benchmark_result.proof_generation_time_ms),
@@ -297,15 +305,17 @@ fn run_detailed_benchmark(
         benchmark_result.proof_verification_time_ms
     );
 
+    println!("\n--- Size Metrics ---");
     println!("Proof Size: {} bytes", benchmark_result.proof_size_bytes);
     println!("Communication Overhead: {} bytes", benchmark_result.communication_overhead_bytes);
     println!("Circuit Size: {} bytes", circuit_size);
 
+    println!("\n--- Resource Usage Metrics ---");
     println!("Prover Computation Load:");
-    println!("  - CPU Usage: {:.10}%", benchmark_result.prover_cpu_usage);
+    println!("  - CPU Usage: {:.2}%", benchmark_result.prover_cpu_usage);
     println!("  - Memory Usage: {:.2} MB", benchmark_result.prover_memory_usage_mb);
     println!("Verifier Computation Load:");
-    println!("  - CPU Usage: {:.10}%", benchmark_result.verifier_cpu_usage);
+    println!("  - CPU Usage: {:.2}%", benchmark_result.verifier_cpu_usage);
     println!("  - Memory Usage: {:.2} MB", benchmark_result.verifier_memory_usage_mb);
 
     // --- Save detailed results to a JSON file ---
@@ -325,7 +335,6 @@ fn run_detailed_benchmark(
     group.finish();
 }
 
-/// Add benchmarks for F2 Single Hash
 fn bench_f2_single(c: &mut Criterion) {
     let circuit_path = "circuits/poseidon/f2/single/circuit.txt";
     let private_path = "circuits/poseidon/f2/single/private.txt";
@@ -334,7 +343,6 @@ fn bench_f2_single(c: &mut Criterion) {
     run_detailed_benchmark(c, "F2_Single_Hash", circuit_path, private_path, public_path);
 }
 
-/// Add benchmarks for F2 Hash Chain (10 iterations)
 fn bench_f2_hash_chain_10(c: &mut Criterion) {
     let circuit_path = "circuits/poseidon/f2/hash_chain_10/circuit.txt";
     let private_path = "circuits/poseidon/f2/hash_chain_10/private.txt";

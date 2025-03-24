@@ -33,14 +33,15 @@ The following benchmark results were obtained on a test machine using the VOLEit
 
 | Metric                   | F_2 Single Hash     | F_2 Hash Chain (10 iterations) |
 |--------------------------|---------------|--------------------------------|
-| Proof Generation Time    | 209.704µs     | 1.056158ms                      |
-| Proof Verification Time  | 140.679µs     | 572.266µs                       |
-| Proof Size               | 24,333 bytes  | 58,561 bytes                   |
-| Prover Computation Load  | 0.00% CPU, 1.92 MB | 0.00% CPU, 0.91 MB        |
-| Verifier Computation Load| 0.00% CPU, 0.16 MB | 0.00% CPU, 0.27 MB        |
-| Communication Overhead   | 24,526 bytes  | 58,807 bytes                   |
+| Proof Generation Time    | 537.012µs     | 1.699533ms                      |
+| Proof Verification Time  | 214.07µs     | 1.061466ms                      |
+| Proof Size               | 24,312 bytes  | 58,618 bytes                   |
+| Prover Computation Load  | 0.10% CPU, 11.66 MB | 0.19% CPU, 15.28 MB        |
+| Verifier Computation Load| 0.12% CPU, 13.97 MB | 0.13% CPU, 16.89 MB        |
+| Communication Overhead   | 24,377 bytes  | 58,738 bytes                   |
 
 You can run the benchmarks yourself using the following scripts:
+
 ```bash
 cargo bench
 ```
