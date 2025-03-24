@@ -26,7 +26,7 @@ fn main() -> eyre::Result<()> {
     match &cli.command {
         Some(Commands::Prove { field, circuit }) => {
             let field_type = field.as_deref().unwrap_or("f2");
-            let circuit_type = circuit.as_deref().unwrap_or("single_hash");
+            let circuit_type = circuit.as_deref().unwrap_or("single");
 
             println!("Running prove with field: {}, circuit: {}", field_type, circuit_type);
 

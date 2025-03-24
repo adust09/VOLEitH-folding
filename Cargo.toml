@@ -8,7 +8,7 @@ debug = true
 lto = true
 
 [dependencies]
-schmivitz = { git = "https://github.com/adust09/swanky", rev="f4d701309c6c221913f1d98fc3c9977e712815e4"}
+schmivitz = { git = "https://github.com/adust09/swanky", rev="2c9631e03ba7a8c1a588ba1dc42164c309d04352"}
 
 eyre = "0.6.12"
 rand = "0.8.5"

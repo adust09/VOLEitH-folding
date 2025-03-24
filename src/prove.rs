@@ -88,8 +88,8 @@ pub fn main() -> Result<()> {
     // Determine which field size to use based on FIELD_SIZE
     let field_type = match FIELD_SIZE {
         2 => ("F_2", "f2"),
-        128 => ("F_128", "f128"),
-        18446744073709551616 => ("F64", "f64"),
+        // 128 => ("F_128", "f128"),
+        // 18446744073709551616 => ("F64", "f64"),
         _ => return Err(eyre::eyre!("Unsupported field size: {}", FIELD_SIZE)),
     };
 
@@ -274,8 +274,8 @@ mod tests {
         // Determine which field size to use based on FIELD_SIZE
         let field_type = match FIELD_SIZE {
             2 => "f2",
-            128 => "f128",
-            18446744073709551616 => "f64",
+            // 128 => "f128",
+            // 18446744073709551616 => "f64",
             _ => {
                 // Skip test for unsupported field sizes
                 println!(
@@ -355,8 +355,8 @@ mod tests {
         // Determine which field size to use based on FIELD_SIZE
         let field_type = match FIELD_SIZE {
             2 => "f2",
-            128 => "f128",
-            18446744073709551616 => "f64",
+            // 128 => "f128",
+            // 18446744073709551616 => "f64",
             _ => {
                 // Skip test for unsupported field sizes
                 println!(
