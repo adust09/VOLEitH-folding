@@ -32,9 +32,9 @@ fn main() -> eyre::Result<()> {
 
             // Different output paths based on circuit type
             let (circuit_path, private_path, public_path, output_prefix) = (
-                format!("src/circuits/poseidon/{}/{}/circuit.txt", field_type, circuit_type),
-                format!("src/circuits/poseidon/{}/{}/private.txt", field_type, circuit_type),
-                format!("src/circuits/poseidon/{}/{}/public.txt", field_type, circuit_type),
+                format!("circuits/poseidon/{}/{}/circuit.txt", field_type, circuit_type),
+                format!("circuits/poseidon/{}/{}/private.txt", field_type, circuit_type),
+                format!("circuits/poseidon/{}/{}/public.txt", field_type, circuit_type),
                 format!("{}_{}", field_type, circuit_type),
             );
 
@@ -54,28 +54,27 @@ fn main() -> eyre::Result<()> {
         None => {
             // Default behavior with improved help message
             println!(
-                "No command specified. Using default: 'prove' with f64 field and standard circuit."
+                "No command specified. Using default: 'prove' with f2 field and single circuit."
             );
             println!("Available options:");
-            println!("  --field: f2 or f64 (default: f64)");
-            println!("  --circuit: standard or hash_chain (default: standard)");
+            println!("  --field: f2 (default: f2)");
+            println!("  --circuit: single or hash_chain (default: single)");
             println!("");
             println!("Examples:");
-            println!("  cargo run -- prove --field f2 --circuit hash_chain   # Run hash chain with F2 (only F2 is supported for hash chains)");
-            println!("  cargo run -- prove --field f64                       # Run standard Poseidon with F64");
-            println!("  cargo run -- prove --field f2                        # Run standard Poseidon with F2");
+            println!("  cargo run -- prove --field f2 --circuit hash_chain_10   # Run hash chain with F2 (only F2 is supported for hash chains)");
+            println!("  cargo run -- prove --field f2                        # Run single Poseidon with F2");
             println!("");
 
             // Same default as if called explicitly
-            let field_type = "f64";
-            let circuit_type = "standard";
+            let field_type = "f2";
+            let circuit_type = "single";
 
             // Use the same path construction logic as in the explicit command
             let (circuit_path, private_path, public_path, output_prefix) = (
-                format!("src/circuits/poseidon/{}/single/poseidon.txt", field_type),
-                format!("src/circuits/poseidon/{}/single/poseidon_private.txt", field_type),
-                format!("src/circuits/poseidon/{}/single/poseidon_public.txt", field_type),
-                format!("standard_{}", field_type),
+                format!("circuits/poseidon/{}/single/poseidon.txt", field_type),
+                format!("circuits/poseidon/{}/single/poseidon_private.txt", field_type),
+                format!("circuits/poseidon/{}/single/poseidon_public.txt", field_type),
+                format!("single_{}", field_type),
             );
 
             let output_path = format!("results/proofs/proof_{}.json", output_prefix);
