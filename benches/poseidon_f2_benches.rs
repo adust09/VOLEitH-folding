@@ -12,6 +12,7 @@ struct BenchmarkResult {
     proof_generation_time_ms: u64,
     proof_verification_time_ms: u64,
     proof_size_bytes: usize,
+    communication_overhead_bytes: usize, // Added for Prover-Verifier communication
     prover_cpu_usage: f32,
     prover_memory_usage_mb: f64,
     verifier_cpu_usage: f32,
@@ -41,11 +42,15 @@ fn create_transcript() -> Transcript {
 }
 
 /// Run the proof generation and verification process with detailed measurements
+/// Performs 10 runs and averages the results
 fn run_proof(
     circuit_path_str: &str,
     private_input_path_str: &str,
     public_input_path_str: &str,
 ) -> BenchmarkResult {
+    // Number of runs to average
+    const NUM_RUNS: u32 = 10;
+
     // Read circuit and input files
     let circuit_path = Path::new(circuit_path_str);
     let circuit_bytes = fs::read_to_string(circuit_path)
@@ -66,6 +71,8 @@ fn run_proof(
         public_input_path
     );
 
+    println!("Running {} iterations for accurate measurements...", NUM_RUNS);
+
     // System stabilization before measuring
     std::thread::sleep(std::time::Duration::from_millis(200));
 
@@ -73,29 +80,14 @@ fn run_proof(
     // Measure prover resource usage before proof generation
     let (cpu_before_prove, mem_before_prove) = get_process_usage();
 
-    // Run the proof operation multiple times to get more accurate system usage readings
-    let mut prove_duration = Duration::ZERO;
-
-    // Do some warmup iterations
-    for _ in 0..3 {
-        let circuit_warmup = &mut Cursor::new(circuit_bytes_slice);
-        let mut transcript_warmup = create_transcript();
-        let rng_warmup = &mut thread_rng();
-
-        let _ = Proof::<InsecureVole>::prove::<_, _>(
-            circuit_warmup,
-            private_input_path,
-            &mut transcript_warmup,
-            rng_warmup,
-        )
-        .expect("Failed in warmup proof generation");
-    }
-
     // First, generate a proof we'll keep for verification later and measuring size
     let circuit_for_proof = &mut Cursor::new(circuit_bytes_slice);
     let mut transcript_for_proof = create_transcript();
     let rng_for_proof = &mut thread_rng();
 
+    let mut total_proving_time = Duration::ZERO;
+
+    // Generate the first proof and measure its time
     let start_main = Instant::now();
     let proof = Proof::<InsecureVole>::prove::<_, _>(
         circuit_for_proof,
@@ -104,11 +96,10 @@ fn run_proof(
         rng_for_proof,
     )
     .expect("Failed to generate main proof");
-    let main_duration = start_main.elapsed();
-    prove_duration = main_duration;
+    total_proving_time += start_main.elapsed();
 
-    // Additional runs for more accurate CPU measurement
-    for _ in 0..4 {
+    // Run additional (NUM_RUNS-1) iterations for a total of NUM_RUNS
+    for i in 1..NUM_RUNS {
         let circuit_run = &mut Cursor::new(circuit_bytes_slice);
         let mut transcript_run = create_transcript();
         let rng_run = &mut thread_rng();
@@ -120,12 +111,13 @@ fn run_proof(
             &mut transcript_run,
             rng_run,
         )
-        .expect("Failed to generate additional proof");
-        prove_duration += start.elapsed();
+        .expect(&format!("Failed to generate proof in iteration {}", i));
+        total_proving_time += start.elapsed();
     }
 
     // Calculate average proving time across all runs
-    prove_duration = prove_duration / 5;
+    let prove_duration = total_proving_time / NUM_RUNS;
+    println!("Average proving time ({} runs): {:?}", NUM_RUNS, prove_duration);
 
     // Measure prover resource usage after proof generation
     let (cpu_after_prove, mem_after_prove) = get_process_usage();
@@ -133,6 +125,20 @@ fn run_proof(
     // Calculate proof size in bytes
     let proof_string = format!("{:?}", proof);
     let proof_size_bytes = proof_string.len();
+    println!("Proof size: {} bytes", proof_size_bytes);
+
+    // Calculate communication overhead (proof size plus public inputs and protocol overhead)
+    // Read public input file to calculate its size for communication overhead
+    let public_input_content =
+        fs::read_to_string(public_input_path).unwrap_or_else(|_| "".to_string());
+    let public_input_size = public_input_content.len();
+
+    // Communication overhead includes the proof size and the public inputs
+    // Plus a fixed protocol overhead for messages exchanged (estimated at 128 bytes)
+    let protocol_overhead = 128; // Estimated overhead for protocol messages
+    let communication_overhead_bytes = proof_size_bytes + public_input_size + protocol_overhead;
+
+    println!("Communication overhead: {} bytes", communication_overhead_bytes);
 
     // Allow system to stabilize before verification
     std::thread::sleep(std::time::Duration::from_millis(200));
@@ -141,21 +147,27 @@ fn run_proof(
     // Measure verifier resource usage before verification
     let (cpu_before_verify, mem_before_verify) = get_process_usage();
 
-    // Measure verification time (with multiple iterations for better measurement)
-    let mut verify_duration = Duration::ZERO;
-    for _ in 0..5 {
+    // Measure verification time with NUM_RUNS iterations
+    let mut total_verification_time = Duration::ZERO;
+    for i in 0..NUM_RUNS {
         // Reset circuit cursor for verification
         let circuit_verify = &mut Cursor::new(circuit_bytes_slice);
         let mut verification_transcript = create_transcript();
 
         let start = Instant::now();
         let verification_result = proof.verify(circuit_verify, &mut verification_transcript);
-        verify_duration += start.elapsed();
+        total_verification_time += start.elapsed();
 
-        assert!(verification_result.is_ok(), "Proof verification failed");
+        assert!(
+            verification_result.is_ok(),
+            "{}",
+            &format!("Proof verification failed in iteration {}", i)
+        );
     }
+
     // Calculate average verification time
-    verify_duration = verify_duration / 5;
+    let verify_duration = total_verification_time / NUM_RUNS;
+    println!("Average verification time ({} runs): {:?}", NUM_RUNS, verify_duration);
 
     // Measure verifier resource usage after verification
     let (cpu_after_verify, mem_after_verify) = get_process_usage();
@@ -165,6 +177,7 @@ fn run_proof(
         proof_generation_time_ms: prove_duration.as_millis() as u64,
         proof_verification_time_ms: verify_duration.as_millis() as u64,
         proof_size_bytes,
+        communication_overhead_bytes,
         prover_cpu_usage: cpu_after_prove - cpu_before_prove,
         prover_memory_usage_mb: mem_after_prove - mem_before_prove,
         verifier_cpu_usage: cpu_after_verify - cpu_before_verify,
@@ -189,18 +202,24 @@ fn run_detailed_benchmark(
     );
     assert!(Path::new(public_path).exists(), "Public input file does not exist at {}", public_path);
 
+    println!("\n====== {} BENCHMARK START ======", group_name);
+
     // Get circuit size as parameter for throughput measurements
     let circuit_size = fs::read_to_string(circuit_path).unwrap().len();
+    println!("Circuit size: {} bytes", circuit_size);
 
     // Create a benchmark group
     let mut group = c.benchmark_group(group_name);
-    group.sample_size(10); // Run 10 times
+    group.sample_size(10); // Run 10 times for Criterion measurements
     group.throughput(Throughput::Bytes(circuit_size as u64));
 
-    // Run a single complete benchmark to get detailed metrics outside of criterion's timing
+    println!("Running detailed benchmark with 10 iterations...");
+
+    // Run the complete benchmark to get detailed metrics outside of criterion's timing
     let benchmark_result = run_proof(circuit_path, private_path, public_path);
 
-    // --- Benchmark 1: Proof Generation Time ---
+    // --- Benchmark 1: Proof Generation Time using Criterion ---
+    println!("Running Criterion measurements for proof generation...");
     group.bench_function("proof_generation_time", |b| {
         b.iter_custom(|iters| {
             let mut total_time = Duration::ZERO;
@@ -229,7 +248,8 @@ fn run_detailed_benchmark(
         });
     });
 
-    // --- Benchmark 2: Proof Verification Time ---
+    // --- Benchmark 2: Proof Verification Time using Criterion ---
+    println!("Running Criterion measurements for verification...");
     group.bench_function("proof_verification_time", |b| {
         b.iter_custom(|iters| {
             // Generate the proof once outside the timing loop
@@ -264,13 +284,29 @@ fn run_detailed_benchmark(
         });
     });
 
-    // --- Report static metrics ---
-    println!("\n{} Benchmark Results:", group_name);
+    // --- Report comprehensive metrics ---
+    println!("\n====== {} BENCHMARK RESULTS ======", group_name);
+    println!(
+        "Proof Generation Time: {:?} ({} ms)",
+        Duration::from_millis(benchmark_result.proof_generation_time_ms),
+        benchmark_result.proof_generation_time_ms
+    );
+    println!(
+        "Proof Verification Time: {:?} ({} ms)",
+        Duration::from_millis(benchmark_result.proof_verification_time_ms),
+        benchmark_result.proof_verification_time_ms
+    );
+
     println!("Proof Size: {} bytes", benchmark_result.proof_size_bytes);
-    println!("Prover CPU Usage: {:.2}%", benchmark_result.prover_cpu_usage);
-    println!("Prover Memory Usage: {:.2} MB", benchmark_result.prover_memory_usage_mb);
-    println!("Verifier CPU Usage: {:.2}%", benchmark_result.verifier_cpu_usage);
-    println!("Verifier Memory Usage: {:.2} MB", benchmark_result.verifier_memory_usage_mb);
+    println!("Communication Overhead: {} bytes", benchmark_result.communication_overhead_bytes);
+    println!("Circuit Size: {} bytes", circuit_size);
+
+    println!("Prover Computation Load:");
+    println!("  - CPU Usage: {:.10}%", benchmark_result.prover_cpu_usage);
+    println!("  - Memory Usage: {:.2} MB", benchmark_result.prover_memory_usage_mb);
+    println!("Verifier Computation Load:");
+    println!("  - CPU Usage: {:.10}%", benchmark_result.verifier_cpu_usage);
+    println!("  - Memory Usage: {:.2} MB", benchmark_result.verifier_memory_usage_mb);
 
     // --- Save detailed results to a JSON file ---
     let results_dir = Path::new("benchmark_results");
@@ -283,7 +319,8 @@ fn run_detailed_benchmark(
         .expect("Failed to serialize benchmark results");
     fs::write(&result_path, result_json).expect("Failed to write benchmark results to file");
 
-    println!("Detailed metrics saved to {}", result_path);
+    println!("\nDetailed metrics saved to {}", result_path);
+    println!("====== {} BENCHMARK COMPLETE ======\n", group_name);
 
     group.finish();
 }

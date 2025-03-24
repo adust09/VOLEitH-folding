@@ -29,27 +29,18 @@ The following benchmark results were obtained on a test machine using the VOLEit
 
 - Apple M1 with 16GB memory
 - [VOLE itH Parameters](https://github.com/adust09/swanky/blob/dev/schmivitz/src/parameters.rs)
-- F_2 Single Hash and F_2 Hash Chain (10 iterations) values are both the average of 20 runs
+- F_2 Single Hash and F_2 Hash Chain (10 iterations) values are both the average of 10 runs
 
 | Metric                   | F_2 Single Hash     | F_2 Hash Chain (10 iterations) |
 |--------------------------|---------------|--------------------------------|
-| Proof Generation Time    | 104.25 ms     | 120.20 ms                      |
-| Proof Verification Time  | 53.55 ms      | 66.85 ms                       |
-| Proof Size               | 24,322 bytes  | 58,582 bytes                   |
-| Prover Computation Load  | 0.16% CPU, 0.01 MB | 0.32% CPU, 0.01 MB        |
-| Verifier Computation Load| 0.15% CPU, 0.01 MB | 0.26% CPU, 0.01 MB        |
-| Communication Overhead   | 26,052 bytes  | 78,725 bytes                   |
+| Proof Generation Time    | 209.704µs     | 1.056158ms                      |
+| Proof Verification Time  | 140.679µs     | 572.266µs                       |
+| Proof Size               | 24,333 bytes  | 58,561 bytes                   |
+| Prover Computation Load  | 0.00% CPU, 1.92 MB | 0.00% CPU, 0.91 MB        |
+| Verifier Computation Load| 0.00% CPU, 0.16 MB | 0.00% CPU, 0.27 MB        |
+| Communication Overhead   | 24,526 bytes  | 58,807 bytes                   |
 
 You can run the benchmarks yourself using the following scripts:
-
 ```bash
-./run_benchmark.sh
-./run_hash_chain_benchmark.sh
-```
-
-Or you can run the benchmarks manually using the following commands:
-
-```bash
-cargo run --bin voleitH-bench -- prove --field f2 // For F_2 field single hash:
-cargo run --bin voleitH-bench -- prove --field f2 --circuit hash_chain_10 // For F_2 Hash Chain 10 iterations
+cargo bench
 ```
