@@ -18,6 +18,7 @@ The schmivitz library has been modified to work with F64b instead of F2. Private
 3. The circuit itself operates in the specified field (F_2, F_128, or Fp)
 
 For example, in the private input files:
+
 - A value of `<0>` remains 0 in F64b
 - A value of `<1>` is converted to 1 in F64b
 - For MDS matrix coefficients, we use binary patterns that will be converted to the appropriate values in F64b
