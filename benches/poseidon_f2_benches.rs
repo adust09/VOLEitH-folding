@@ -318,18 +318,6 @@ fn run_detailed_benchmark(
     println!("  - CPU Usage: {:.2}%", benchmark_result.verifier_cpu_usage);
     println!("  - Memory Usage: {:.2} MB", benchmark_result.verifier_memory_usage_mb);
 
-    // --- Save detailed results to a JSON file ---
-    let results_dir = Path::new("benchmark_results");
-    if !results_dir.exists() {
-        fs::create_dir_all(results_dir).expect("Failed to create benchmark_results directory");
-    }
-
-    let result_path = format!("benchmark_results/{}_metrics.json", group_name);
-    let result_json = serde_json::to_string_pretty(&benchmark_result)
-        .expect("Failed to serialize benchmark results");
-    fs::write(&result_path, result_json).expect("Failed to write benchmark results to file");
-
-    println!("\nDetailed metrics saved to {}", result_path);
     println!("====== {} BENCHMARK COMPLETE ======\n", group_name);
 
     group.finish();
