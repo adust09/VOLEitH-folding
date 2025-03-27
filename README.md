@@ -25,22 +25,22 @@ The following two methods are used for onchain-verification.
 
 ## Benchmark
 
-The following benchmark results were obtained on a test machine using the VOLEitH implementation with `Poseidon hash`.
+The following benchmark results were obtained on a test machine using the VOLEitH implementation with partially simplified `Poseidon hash`.
 
 - Apple M1 with 16GB memory
 - [VOLE itH Parameters](https://github.com/adust09/swanky/blob/dev/schmivitz/src/parameters.rs)
 - Hash Chain (10 iterations) values are both the average of 10 runs
 
-| Metric                    | F2 Single Hash         | F2 Hash Chain (10 iters) | F64 Single Hash        | F64 Hash Chain (10 iters) |
-|---------------------------|------------------------|---------------------------|------------------------|----------------------------|
-| **Proof Generation Time** | 537.012 µs             | 1.699533 ms               | 336.628 µs             | 1.700849 ms                |
-| **Proof Verification Time** | 214.07 µs            | 1.061466 ms               | 457.029 µs             | 1.154495 ms                |
-| **Proof Size**            | 24,312 bytes           | 58,618 bytes              | 48,271 bytes           | 100,445 bytes              |
-| **Communication Overhead**| 24,377 bytes           | 58,738 bytes              | 48,397 bytes           | 100,578 bytes              |
-| **Prover CPU Usage**      | 0.10%                  | 0.19%                     | 0.11%                  | 0.08%                      |
-| **Prover Memory Usage**   | 11.66 MB               | 15.28 MB                  | 11.94 MB               | 15.88 MB                   |
-| **Verifier CPU Usage**    | 0.12%                  | 0.13%                     | 0.11%                  | 0.07%                      |
-| **Verifier Memory Usage** | 13.97 MB               | 16.89 MB                  | 14.33 MB               | 16.97 MB                   |
+| Metric                    |  F64 Single Hash        | F64 Hash Chain (10 iters) |
+|---------------------------|-------------------------|----------------------------|
+| **Proof Generation Time** |    336.628 µs             | 1.700849 ms                |
+| **Proof Verification Time**  | 457.029 µs             | 1.154495 ms                |
+| **Proof Size**            |    48,271 bytes           | 100,445 bytes              |
+| **Communication Overhead**|    48,397 bytes           | 100,578 bytes              |
+| **Prover CPU Usage**      |    0.11%                  | 0.08%                      |
+| **Prover Memory Usage**   |    11.94 MB               | 15.88 MB                   |
+| **Verifier CPU Usage**    |    0.11%                  | 0.07%                      |
+| **Verifier Memory Usage** |    14.33 MB               | 16.97 MB                   |
 
 You can run the benchmarks yourself using the following scripts:
 
